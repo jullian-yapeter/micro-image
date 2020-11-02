@@ -1,6 +1,7 @@
 import config as cfg
 import matplotlib.pyplot as plt
 import numpy as np
+from PIL import Image
 from random import randint
 import os
 import sys
@@ -21,13 +22,13 @@ class Simulator():
 
     def show_all_images(self):
         for img in self.imgs:
-            plt.imshow(1-img, cmap='gray')
+            plt.imshow(255-img, cmap='gray')
             plt.show()
 
     def save_all_images(self):
         for i, img in enumerate(self.imgs):
-            path = os.path.join(cfg.COLLECTED_DIR, f"{self.sessName}_{i}.jpeg")
-            plt.imsave(path, img, cmap='gray')
+            path = os.path.join(cfg.COLLECTED_DIR, f"{self.sessName}_{i}.png")
+            Image.fromarray(255-img).save(path)
 
     def _create_all_images(self):
         return [self._create_image(frame) for frame in self.frames]
@@ -36,25 +37,24 @@ class Simulator():
         outer_frame, inner_frame = frame.frame_to_arrays()
         mid_pix = [round(inner_frame.shape[0] / 2), round(inner_frame.shape[1] / 2)]
         border_coords = self._create_border(inner_frame, mid_pix[1])
-        if not self._is_valid_pix(inner_frame, border_coords, mid_pix[0], mid_pix[1]):
-            print(border_coords[mid_pix[0]])
-            print(mid_pix)
-            print(inner_frame[mid_pix[0], mid_pix[1]])
-        self._fill_body(inner_frame, border_coords, mid_pix[0], mid_pix[1])
-        return frame.place_inner_into_outer(outer_frame, inner_frame)
+        self._fill_body(inner_frame, border_coords)
+        return frame.place_inner_into_outer(outer_frame, inner_frame).astype(np.uint8)
 
     def _create_border(self, body_frame, mid_col):
         return [(mid_col - randint(1, round(body_frame.shape[1]/2)), mid_col + randint(1, round(body_frame.shape[1]/2)))
                 for row in range(body_frame.shape[0])]
 
-    def _is_valid_pix(self, body_frame, border_coords, row, col):
-        return (row >= 0 and row < body_frame.shape[0]) and \
-            (col >= 0 and col < body_frame.shape[1]) and \
-            (col >= border_coords[row][0] and col <= border_coords[row][1]) and \
-            (body_frame[row, col] != 1)
+    def _fill_body(self, body_frame, border_coords):
+        for row in range(body_frame.shape[0]):
+            body_frame[row, border_coords[row][0]: border_coords[row][1] + 1] = 255
 
-    def _fill_body(self, body_frame, border_coords, row, col):
-        if self._is_valid_pix(body_frame, border_coords, row, col):
+    def _fill_body_recur(self, body_frame, border_coords, row, col):
+        def _is_valid_pix(body_frame, border_coords, row, col):
+            return (row >= 0 and row < body_frame.shape[0]) and \
+                (col >= 0 and col < body_frame.shape[1]) and \
+                (col >= border_coords[row][0] and col <= border_coords[row][1]) and \
+                (body_frame[row, col] != 1)
+        if _is_valid_pix(body_frame, border_coords, row, col):
             body_frame[row, col] = 1
             for i in range(-1, 2, 1):
                 for j in range(-1, 2, 1):
