@@ -64,26 +64,35 @@ class Simulator():
             body_frame[row, border_coords[row][0]: border_coords[row][1] + 1] = 255
 
     def _create_all_veins(self):
-        return [self._create_veins(frame, num_strands=5) for frame in self.frames]
+        return [self._create_veins(frame, num_strands=3) for frame in self.frames]
 
     def _create_veins(self, frame, num_strands=2):
         outer_frame, inner_frame = frame.frame_to_arrays()
         mid_pix = [sum(x) for x in zip(frame.anchor, self._get_mid_pix(inner_frame))]
         for i in range(num_strands):
-            self._create_vein_recur(outer_frame, mid_pix[0], mid_pix[1], 0, v_dir=1, thickness=3)
-            self._create_vein_recur(outer_frame, mid_pix[0], mid_pix[1], 0, v_dir=-1, thickness=3)
+            # self._create_vein_recur(outer_frame, mid_pix[0], mid_pix[1], 0, v_dir=1, thickness=3)
+            # self._create_vein_recur(outer_frame, mid_pix[0], mid_pix[1], 0, v_dir=-1, thickness=3)
+            # self._create_vein_recur(outer_frame, mid_pix[0], mid_pix[1], 0, h_dir=1, thickness=3)
+            # self._create_vein_recur(outer_frame, mid_pix[0], mid_pix[1], 0, h_dir=-1, thickness=3)
+            self._create_vein_recur(outer_frame, mid_pix[0], mid_pix[1], 0, thickness=20)
+
         return outer_frame
 
-    def _create_vein_recur(self, frame, row, col, r_depth, v_dir=1, thickness=3):
+    def _create_vein_recur(self, frame, row, col, r_depth, v_dir=None, h_dir=None, thickness=3):
         def _is_valid_pix(frame, row, col):
             return (row >= 0 and row < frame.shape[0]) and \
                 (col >= 0 and col < frame.shape[1]) and \
                 r_depth < cfg.RECURSION_DEPTH_LIMIT
         if _is_valid_pix(frame, row, col):
             self._square_stamp(frame, row, col, thickness)
-            dir_x, dir_y = v_dir, choice((-1,1))
+            if h_dir is None and v_dir is not None:
+                dir_x, dir_y = choice((0, v_dir)), choice((-1, 1))
+            elif v_dir is None and h_dir is not None:
+                dir_x, dir_y = choice((-1, 1)), choice((0, h_dir))
+            else:
+                dir_x, dir_y = choice((-1, 0, 1)), choice((-1, 0, 1))
             self._create_vein_recur(frame, round(row + ((thickness + 1)/ 2) * dir_x),
-                                round(col + ((thickness + 1)/ 2) * dir_y), r_depth+1, v_dir=v_dir, thickness=thickness)
+                    round(col + ((thickness + 1)/ 2) * dir_y), r_depth+1, v_dir=v_dir, h_dir=h_dir, thickness=thickness)
 
     def _square_stamp(self, frame, row, col, dim):
         def _is_valid_pix(frame, row, col):
@@ -166,5 +175,5 @@ if __name__ == "__main__":
     # sim = Simulator("small_sess", numSamples=5, size=(100, 100))
     # sim.show_all_images()
     # sim.save_all_images()
-    sim = Simulator("small_sess", numSamples=5, size=(1000, 1000))
-    sim.show_everything()
+    sim = Simulator("small_sess", numSamples=5, size=(200, 200))
+    sim.show_all_veins()
