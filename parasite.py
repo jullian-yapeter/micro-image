@@ -7,18 +7,13 @@ import numpy as np
 '''
 Representation of a parasite's body and dye
 '''
-
-
 class Parasite():
 
-    def __init__(self, path_to_body, path_to_dye):
+    def __init__(self, sess_name, path_to_body):
+        self.sess_name = sess_name
         self.body = ScanLinesMicroImage(path_to_body)
-        self.dye = BitMapMicroImage(path_to_dye)
+        # self.dye = BitMapMicroImage(path_to_dye)
         self.has_cancer = False
-
-    def save_data(self):
-        self.save_body()
-        self.save_dye()
 
     def calc_cancer(self):
         return
@@ -29,13 +24,18 @@ class Parasite():
     def show_image(self):
         return
 
-    def save_image(self):
-        return
-
     def save_body_data(self):
-        path = os.path.join(cfg.SAVE_DIR, "body.npy")
-        np.save(path, self.body.get_border())
+        self.body.print_memory()
+        self.body.save_processed_img(self.sess_name + "_body")
 
     def save_dye_data(self):
-        path = os.path.join(cfg.SAVE_DIR, "dye.npy")
-        np.save(path, self.body.get_bitscan())
+        self.dye.print_memory()
+        self.dye.save_processed_img(self.sess_name + "_dye")
+
+    def save_data(self):
+        self.save_body()
+        self.save_dye()
+
+if __name__ == "__main__":
+    par1 = Parasite("lab0", os.path.join(cfg.COLLECTED_DIR, "med_sess_0.tiff"))
+    par1.save_body_data()
