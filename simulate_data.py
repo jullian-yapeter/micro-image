@@ -21,6 +21,11 @@ class Simulator():
         else:
             raise ValueError("Passed in size is too large")
 
+    def show_everything(self):
+        for img, vs in zip(self.imgs, self.veins):
+            plt.imshow((255-img)/2 + 255-vs, cmap='gray')
+            plt.show()
+
     def show_all_frames(self):
         for frame in self.frames:
             frame.show_frame()
@@ -63,7 +68,7 @@ class Simulator():
 
     def _create_veins(self, frame, num_strands=2):
         outer_frame, inner_frame = frame.frame_to_arrays()
-        mid_pix = self._get_mid_pix(inner_frame)
+        mid_pix = [sum(x) for x in zip(frame.anchor, self._get_mid_pix(inner_frame))]
         for i in range(num_strands):
             self._create_vein_recur(outer_frame, mid_pix[0], mid_pix[1], 0, v_dir=1, thickness=3)
             self._create_vein_recur(outer_frame, mid_pix[0], mid_pix[1], 0, v_dir=-1, thickness=3)
@@ -73,7 +78,7 @@ class Simulator():
         def _is_valid_pix(frame, row, col):
             return (row >= 0 and row < frame.shape[0]) and \
                 (col >= 0 and col < frame.shape[1]) and \
-                r_depth < 1000
+                r_depth < cfg.RECURSION_DEPTH_LIMIT
         if _is_valid_pix(frame, row, col):
             self._square_stamp(frame, row, col, thickness)
             dir_x, dir_y = v_dir, choice((-1,1))
@@ -162,4 +167,4 @@ if __name__ == "__main__":
     # sim.show_all_images()
     # sim.save_all_images()
     sim = Simulator("small_sess", numSamples=5, size=(1000, 1000))
-    sim.show_all_veins()
+    sim.show_everything()
