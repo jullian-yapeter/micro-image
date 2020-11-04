@@ -66,8 +66,7 @@ class MicroImage():
         plt.show()
 
     def save_processed_img(self, filename):
-        path = os.path.join(cfg.PROCESSED_DIR, f"{filename}.npy")
-        np.save(path, self.processed)
+        raise NotImplementedError
 
     def print_memory(self):
         raise NotImplementedError
@@ -76,7 +75,7 @@ class MicroImage():
 class ScanLinesMicroImage(MicroImage):
 
     def __init__(self, path):
-        self.dtype = "uint8" # at least
+        self.dtype = "uint16" # at least
         super().__init__(path)
         
     def _pix_to_rc(self, pix, numCols):
@@ -128,6 +127,10 @@ class ScanLinesMicroImage(MicroImage):
         plt.show()
         return res_img
 
+    def save_processed_img(self, filename):
+        path = os.path.join(cfg.PROCESSED_DIR, f"{filename}.npy")
+        np.save(path, self.processed)
+
     def print_memory(self):
         print("---RAW---")
         print(f"total size of raw data (bytes): {self.raw_size}")
@@ -177,6 +180,10 @@ class BitMapMicroImage(MicroImage):
             return [0] * 8
         b2 = [int(char) for char in bin(int(b10))[2:]]
         return [0] * (8 - len(b2)) + b2
+    
+    def save_processed_img(self, filename):
+        path = os.path.join(cfg.PROCESSED_DIR, f"{filename}.npy")
+        np.save(path, self.processed)
 
     def print_memory(self):
         print("---RAW---")
@@ -210,6 +217,11 @@ class Base64MicroImage(MicroImage):
         plt.show()
         return img
 
+    def save_processed_img(self, filename):
+        path = os.path.join(cfg.PROCESSED_DIR, f"{filename}.out")
+        with open(path, "wb") as outfile: 
+            outfile.write(self.processed)
+
     def print_memory(self):
         print("---RAW---")
         print(f"total size of raw data (bytes): {self.raw_size}")
@@ -224,11 +236,14 @@ class Base64MicroImage(MicroImage):
 
 if __name__ == "__main__":
     # path = os.path.join(cfg.SPECIAL_COLLECTED_DIR, "block.tiff")
-    path = os.path.join(cfg.COLLECTED_DIR, "med_sess_0.png")
-    body = ScanLinesMicroImage(path)
+    path = os.path.join(cfg.COLLECTED_DIR, "small_sess_0.png")
+    # body = ScanLinesMicroImage(path)
+    # body = BitMapMicroImage(path)
+    body = Base64MicroImage(path)
     body.show_binary_img()
     body.print_memory()
     print(body.validate_process())
+    body.save_processed_img("trial")
 
     # def _process(self):
     #     res = [self.binary_npy.shape[0], self.binary_npy.shape[1]]
