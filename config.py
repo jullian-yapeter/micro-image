@@ -6,6 +6,7 @@ Directory configurations
 DATA_DIR = "data"
 PROCESSED_DIR = os.path.join(DATA_DIR, "processed")
 COLLECTED_DIR = os.path.join(DATA_DIR, "collected")
+SPECIAL_COLLECTED_DIR = os.path.join(DATA_DIR, "special_collected")
 
 '''
 Data Information
@@ -20,3 +21,9 @@ MIN_BODY_FRAME_PERC = 0.25
 CANCER_THRESH_PERC = 0.10
 SIM_CANCER_RATE = 0.001
 RECURSION_DEPTH_LIMIT = 200
+
+'''
+Image Processing metadata
+'''
+SCANLINES_CHECKBYTES = 179 # make sure to fit in uint8
+BITMAP_CHECKBYTES = 179

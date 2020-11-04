@@ -70,11 +70,11 @@ class Simulator():
         outer_frame, inner_frame = frame.frame_to_arrays()
         mid_pix = [sum(x) for x in zip(frame.anchor, self._get_mid_pix(inner_frame))]
         for i in range(num_strands):
-            # self._create_vein_recur(outer_frame, mid_pix[0], mid_pix[1], 0, v_dir=1, thickness=3)
-            # self._create_vein_recur(outer_frame, mid_pix[0], mid_pix[1], 0, v_dir=-1, thickness=3)
-            # self._create_vein_recur(outer_frame, mid_pix[0], mid_pix[1], 0, h_dir=1, thickness=3)
-            # self._create_vein_recur(outer_frame, mid_pix[0], mid_pix[1], 0, h_dir=-1, thickness=3)
-            self._create_vein_recur(outer_frame, mid_pix[0], mid_pix[1], 0, thickness=20)
+            self._create_vein_recur(outer_frame, mid_pix[0], mid_pix[1], 0, v_dir=1, thickness=3)
+            self._create_vein_recur(outer_frame, mid_pix[0], mid_pix[1], 0, v_dir=-1, thickness=3)
+            self._create_vein_recur(outer_frame, mid_pix[0], mid_pix[1], 0, h_dir=1, thickness=3)
+            self._create_vein_recur(outer_frame, mid_pix[0], mid_pix[1], 0, h_dir=-1, thickness=3)
+            # self._create_vein_recur(outer_frame, mid_pix[0], mid_pix[1], 0, thickness=20) # for body
 
         return outer_frame
 
