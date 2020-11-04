@@ -16,22 +16,23 @@ class Simulator():
         self.im_save_type = im_save_type
         if size[0] < cfg.MAX_ROWS and size[1] < cfg.MAX_COLS:
             self.frames = [Frame(size) for i in range(numSamples)]
-            self.imgs = self._create_all_bodies(num_runs=cfg.NUM_BODY_RUNS, thickness=cfg.BODY_THICKNESS)
+            self.bodies = self._create_all_bodies(num_runs=cfg.NUM_BODY_RUNS, thickness=cfg.BODY_THICKNESS)
             self.veins = self._create_all_veins(num_strands=cfg.NUM_VEIN_STRANDS, thickness=cfg.VEIN_THICKNESS)
         else:
             raise ValueError("Passed in size is too large")
 
     def show_everything(self):
-        for img, vs in zip(self.imgs, self.veins):
-            plt.imshow((255-img)/2 + 255-vs, cmap='gray')
+        for bd, vs in zip(self.bodies, self.veins):
+            # plt.imshow((255-img)/2 + (255-vs), cmap='gray')
+            plt.imshow(255-np.minimum(bd//5 + vs//3, 255), cmap='gray')
             plt.show()
 
     def show_all_frames(self):
         for frame in self.frames:
             frame.show_frame()
 
-    def show_all_images(self):
-        for img in self.imgs:
+    def show_all_bodies(self):
+        for img in self.bodies:
             plt.imshow(255-img, cmap='gray')
             plt.show()
 
@@ -41,7 +42,7 @@ class Simulator():
             plt.show()
 
     def save_all_bodies(self):
-        for i, img in enumerate(self.imgs):
+        for i, img in enumerate(self.bodies):
             path = os.path.join(cfg.COLLECTED_DIR, f"{self.sess_name}_{i}_body.{self.im_save_type}")
             Image.fromarray(255-img).save(path)
 
@@ -177,16 +178,16 @@ class Frame():
 
 if __name__ == "__main__":
     # sim = Simulator("big_sess", numSamples=5, size=(5000, 5000))
-    # sim.show_all_images()
+    # sim.show_all_bodies()
     # sim.save_all_bodies()
     # sim = Simulator("med_sess", numSamples=5, size=(1000, 1000))
-    # sim.show_all_images()
+    # sim.show_all_bodies()
     # sim.save_all_bodies()
     # sim = Simulator("small_sess", numSamples=5, size=(100, 100))
-    # sim.show_all_images()
+    # sim.show_all_bodies()
     # sim.save_all_bodies()
-    sim = Simulator("small_sess", numSamples=5, size=(1000, 1000))
+    sim = Simulator("small_sess", numSamples=1, size=(1000, 1000))
     sim.show_everything()
-    sim.save_all_bodies()
-    sim.save_all_veins()
+    # sim.save_all_bodies()
+    # sim.save_all_veins()
 

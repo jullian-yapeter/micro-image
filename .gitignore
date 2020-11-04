@@ -2,6 +2,7 @@
 *.jpeg
 *.png
 *.txt
+*.out
 /data
 /dfai_env
 __pycache__/
