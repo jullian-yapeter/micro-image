@@ -16,8 +16,8 @@ class Simulator():
         self.im_save_type = im_save_type
         if size[0] < cfg.MAX_ROWS and size[1] < cfg.MAX_COLS:
             self.frames = [Frame(size) for i in range(numSamples)]
-            self.imgs = self._create_all_images()
-            self.veins = self._create_all_veins()
+            self.imgs = self._create_all_bodies(num_runs=cfg.NUM_BODY_RUNS, thickness=cfg.BODY_THICKNESS)
+            self.veins = self._create_all_veins(num_strands=cfg.NUM_VEIN_STRANDS, thickness=cfg.VEIN_THICKNESS)
         else:
             raise ValueError("Passed in size is too large")
 
@@ -40,20 +40,32 @@ class Simulator():
             plt.imshow(255-vs, cmap='gray')
             plt.show()
 
-    def save_all_images(self):
+    def save_all_bodies(self):
         for i, img in enumerate(self.imgs):
-            path = os.path.join(cfg.COLLECTED_DIR, f"{self.sess_name}_{i}.{self.im_save_type}")
+            path = os.path.join(cfg.COLLECTED_DIR, f"{self.sess_name}_{i}_body.{self.im_save_type}")
             Image.fromarray(255-img).save(path)
 
-    def _create_all_images(self):
-        return [self._create_image(frame) for frame in self.frames]
+    def save_all_veins(self):
+        for i, img in enumerate(self.veins):
+            path = os.path.join(cfg.COLLECTED_DIR, f"{self.sess_name}_{i}_veins.{self.im_save_type}")
+            Image.fromarray(255-img).save(path)
 
-    def _create_image(self, frame):
+    def _create_all_bodies(self, num_runs=3, thickness=40):
+        return [self._create_body(frame, num_runs=num_runs, thickness=thickness) for frame in self.frames]
+
+    def _create_body(self, frame, num_runs=3, thickness=40):
         outer_frame, inner_frame = frame.frame_to_arrays()
         mid_pix = self._get_mid_pix(inner_frame)
-        border_coords = self._create_border(inner_frame, mid_pix[1])
-        self._fill_body(inner_frame, border_coords)
+        for i in range(num_runs):
+            self._random_stroke_recur(inner_frame, mid_pix[0], mid_pix[1], 0, cfg.BODY_RECURSION_DEPTH_LIMIT, thickness=thickness)
         return frame.place_inner_into_outer(outer_frame, inner_frame).astype(np.uint8)
+
+    # def _create_body(self, frame):
+    #     outer_frame, inner_frame = frame.frame_to_arrays()
+    #     mid_pix = self._get_mid_pix(inner_frame)
+    #     border_coords = self._create_border(inner_frame, mid_pix[1])
+    #     self._fill_body(inner_frame, border_coords)
+    #     return frame.place_inner_into_outer(outer_frame, inner_frame).astype(np.uint8)
 
     def _create_border(self, body_frame, mid_col):
         return [(mid_col - randint(1, round(body_frame.shape[1]/2)), mid_col + randint(1, round(body_frame.shape[1]/2)))
@@ -63,26 +75,24 @@ class Simulator():
         for row in range(body_frame.shape[0]):
             body_frame[row, border_coords[row][0]: border_coords[row][1] + 1] = 255
 
-    def _create_all_veins(self):
-        return [self._create_veins(frame, num_strands=3) for frame in self.frames]
+    def _create_all_veins(self, num_strands=2, thickness=3):
+        return [self._create_veins(frame, num_strands=num_strands) for frame in self.frames]
 
-    def _create_veins(self, frame, num_strands=2):
+    def _create_veins(self, frame, num_strands=2, thickness=3):
         outer_frame, inner_frame = frame.frame_to_arrays()
         mid_pix = [sum(x) for x in zip(frame.anchor, self._get_mid_pix(inner_frame))]
         for i in range(num_strands):
-            self._create_vein_recur(outer_frame, mid_pix[0], mid_pix[1], 0, v_dir=1, thickness=3)
-            self._create_vein_recur(outer_frame, mid_pix[0], mid_pix[1], 0, v_dir=-1, thickness=3)
-            self._create_vein_recur(outer_frame, mid_pix[0], mid_pix[1], 0, h_dir=1, thickness=3)
-            self._create_vein_recur(outer_frame, mid_pix[0], mid_pix[1], 0, h_dir=-1, thickness=3)
-            # self._create_vein_recur(outer_frame, mid_pix[0], mid_pix[1], 0, thickness=20) # for body
+            self._random_stroke_recur(outer_frame, mid_pix[0], mid_pix[1], 0, cfg.VEIN_RECURSION_DEPTH_LIMIT, v_dir=1, thickness=thickness)
+            self._random_stroke_recur(outer_frame, mid_pix[0], mid_pix[1], 0, cfg.VEIN_RECURSION_DEPTH_LIMIT, v_dir=-1, thickness=thickness)
+            self._random_stroke_recur(outer_frame, mid_pix[0], mid_pix[1], 0, cfg.VEIN_RECURSION_DEPTH_LIMIT, h_dir=1, thickness=thickness)
+            self._random_stroke_recur(outer_frame, mid_pix[0], mid_pix[1], 0, cfg.VEIN_RECURSION_DEPTH_LIMIT, h_dir=-1, thickness=thickness)
+        return outer_frame.astype(np.uint8)
 
-        return outer_frame
-
-    def _create_vein_recur(self, frame, row, col, r_depth, v_dir=None, h_dir=None, thickness=3):
+    def _random_stroke_recur(self, frame, row, col, r_depth, lim_depth, v_dir=None, h_dir=None, thickness=3):
         def _is_valid_pix(frame, row, col):
             return (row >= 0 and row < frame.shape[0]) and \
                 (col >= 0 and col < frame.shape[1]) and \
-                r_depth < cfg.RECURSION_DEPTH_LIMIT
+                r_depth < lim_depth
         if _is_valid_pix(frame, row, col):
             self._square_stamp(frame, row, col, thickness)
             if h_dir is None and v_dir is not None:
@@ -91,15 +101,15 @@ class Simulator():
                 dir_x, dir_y = choice((-1, 1)), choice((0, h_dir))
             else:
                 dir_x, dir_y = choice((-1, 0, 1)), choice((-1, 0, 1))
-            self._create_vein_recur(frame, round(row + ((thickness + 1)/ 2) * dir_x),
-                    round(col + ((thickness + 1)/ 2) * dir_y), r_depth+1, v_dir=v_dir, h_dir=h_dir, thickness=thickness)
+            self._random_stroke_recur(frame, round(row + ((thickness + 1)/ 2) * dir_x),
+                    round(col + ((thickness + 1)/ 2) * dir_y), r_depth+1, lim_depth, v_dir=v_dir, h_dir=h_dir, thickness=thickness)
 
     def _square_stamp(self, frame, row, col, dim):
         def _is_valid_pix(frame, row, col):
             return (row >= 0 and row < frame.shape[0]) and \
                 (col >= 0 and col < frame.shape[1])
-        for i in range(int(dim)):
-            for j in range(int(dim)):
+        for i in range(-int(dim/2), int(dim/2)):
+            for j in range(-int(dim/2), int(dim/2)):
                 if _is_valid_pix(frame, row + i, col + j):
                     frame[row + i, col + j] = 255
 
@@ -168,12 +178,15 @@ class Frame():
 if __name__ == "__main__":
     # sim = Simulator("big_sess", numSamples=5, size=(5000, 5000))
     # sim.show_all_images()
-    # sim.save_all_images()
+    # sim.save_all_bodies()
     # sim = Simulator("med_sess", numSamples=5, size=(1000, 1000))
     # sim.show_all_images()
-    # sim.save_all_images()
+    # sim.save_all_bodies()
     # sim = Simulator("small_sess", numSamples=5, size=(100, 100))
     # sim.show_all_images()
-    # sim.save_all_images()
-    sim = Simulator("small_sess", numSamples=5, size=(200, 200))
-    sim.show_all_veins()
+    # sim.save_all_bodies()
+    sim = Simulator("small_sess", numSamples=5, size=(1000, 1000))
+    sim.show_everything()
+    sim.save_all_bodies()
+    sim.save_all_veins()
+

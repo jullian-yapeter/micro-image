@@ -9,10 +9,10 @@ Representation of a parasite's body and dye
 '''
 class Parasite():
 
-    def __init__(self, sess_name, path_to_body):
+    def __init__(self, sess_name, path_to_body, path_to_veins):
         self.sess_name = sess_name
-        self.body = ScanLinesMicroImage(path_to_body)
-        # self.dye = BitMapMicroImage(path_to_dye)
+        self.body = BitMapMicroImage(path_to_body)
+        self.veins = BitMapMicroImage(path_to_veins)
         self.has_cancer = False
 
     def calc_cancer(self):
@@ -37,5 +37,5 @@ class Parasite():
         self.save_dye()
 
 if __name__ == "__main__":
-    par1 = Parasite("lab0", os.path.join(cfg.COLLECTED_DIR, "med_sess_0.tiff"))
+    par1 = Parasite("lab0", os.path.join(cfg.COLLECTED_DIR, "small_sess_0_body.png", "small_sess_0_veins.png"))
     par1.save_body_data()
