@@ -65,6 +65,9 @@ class MicroImageLarge():
     def print_memory(self):
         raise NotImplementedError
 
+    def calc_veins_perc(self, veins_of_this_body):
+        return NotImplementedError
+
 
 class ScanLinesMicroImage(MicroImageLarge):
 
@@ -132,6 +135,9 @@ class ScanLinesMicroImage(MicroImageLarge):
         print(f"total size of processed data (bytes): {self.processed.nbytes}")
         print("")
 
+    def calc_veins_perc(self, veins_of_this_body):
+        return NotImplementedError
+
 
 class BitMapMicroImage(MicroImageLarge):
 
@@ -185,6 +191,13 @@ class BitMapMicroImage(MicroImageLarge):
         print(f"total size of processed data (bytes): {self.processed.nbytes}")
         print("")
 
+    def calc_veins_perc(self, veins_of_this_body):
+        total = 0
+        cols, rows = self.raw.size
+        for body_pix, vein_pix in zip(self.processed, veins_of_this_body):
+            total += sum([int(c) for c in bin(body_pix & vein_pix)[2:]])
+        return total/(rows * cols)
+
 class Base64MicroImage(MicroImageLarge):
 
     def __init__(self, path):
@@ -192,7 +205,7 @@ class Base64MicroImage(MicroImageLarge):
 
     def _process(self):
         buffer = BytesIO()
-        self.raw.save(buffer, format="PNG")
+        self.raw.save(buffer, format="png")
         return base64.b64encode(buffer.getvalue())
 
     def _inverse_process(self, processed_img):
@@ -214,6 +227,9 @@ class Base64MicroImage(MicroImageLarge):
         print("---PROCESSED---")
         print(f"total size of processed data (bytes): {getsizeof(self.processed)}")
         print("")
+
+    def calc_veins_perc(self, veins_of_this_body):
+        return NotImplementedError
 
 if __name__ == "__main__":
     # path = os.path.join(cfg.SPECIAL_COLLECTED_DIR, "block.tiff")

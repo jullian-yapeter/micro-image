@@ -1,4 +1,4 @@
-from micro_image import ScanLinesMicroImage, BitMapMicroImage
+from micro_image_large import ScanLinesMicroImage, BitMapMicroImage
 import config as cfg
 import matplotlib.pyplot as plt
 import numpy as np
@@ -19,7 +19,8 @@ class Parasite():
         self.vein_body_frac = self.calc_cancer()
 
     def calc_cancer(self):
-        return np.multiply(self.body.binary_npy, self.veins.binary_npy).sum() / self.body.binary_npy.size
+        # return np.multiply(self.body.binary_npy, self.veins.binary_npy).sum() / self.body.binary_npy.size
+        return self.body.calc_veins_perc(self.veins.processed)
 
     def has_cancer(self):
         return self.vein_body_frac > cfg.CANCER_THRESH_PERC
@@ -48,6 +49,8 @@ if __name__ == "__main__":
                     os.path.join(cfg.COLLECTED_DIR, "small_sess_0_body.tiff"),
                     os.path.join(cfg.COLLECTED_DIR, "small_sess_0_veins.tiff"),
                     BitMapMicroImage)
+    par1.show_image()
+    print(par1.has_cancer())
     # par2 = Parasite("lab1",
     #                 os.path.join(cfg.COLLECTED_DIR, "small_sess_0_body.tiff"),
     #                 os.path.join(cfg.COLLECTED_DIR, "small_sess_0_veins.tiff"),
@@ -65,4 +68,3 @@ if __name__ == "__main__":
     # print(sys.getsizeof(par1.body.processed))
     # print(sys.getsizeof(par2.body.processed))
     # print(sys.getsizeof(par1.body.raw.tobitmap()))
-    par1.body.show_raw_img()
