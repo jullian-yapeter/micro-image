@@ -4,26 +4,22 @@ from io import BytesIO
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-from PIL import Image
+from PIL import Image, ImageChops
 from sys import getsizeof
 
 
 '''
 Image level data and methods
 '''
-class MicroImage():
+class MicroImageLarge():
 
     def __init__(self, path):
         self.raw_size = os.path.getsize(path)
         self.raw = self._read_img(path)
-        self.binary_npy = self._raw_to_bin_npy(self.raw) # 1 for subject and 0 for background
         self.processed = self._process()
 
     def _read_img(self, path):
         return Image.open(path)
-
-    def _raw_to_bin_npy(self, raw):
-        return ((255-np.asarray(raw)) / 255).astype(np.uint8)
 
     def _bin_npy_to_raw(self, bin_npy):
         return Image.fromarray((1-bin_npy.astype(np.uint8))*255)
@@ -51,14 +47,16 @@ class MicroImage():
         raise NotImplementedError
 
     def validate_process(self):
-        return np.array_equal(self.binary_npy, self._raw_to_bin_npy(self._inverse_process(self.processed)))
+        self.show_raw_img()
+        self.show_inversed_img()
+        return (ImageChops.difference(self.raw, self._inverse_process(self.processed)).getbbox() is None)
 
     def show_raw_img(self):
         plt.imshow(self.raw, cmap='gray')
         plt.show()
 
-    def show_binary_img(self):
-        plt.imshow((1-self.binary_npy)*255, cmap='gray')
+    def show_inversed_img(self):
+        plt.imshow(self._inverse_process(self.processed), cmap='gray')
         plt.show()
 
     def save_processed_img(self, filename):
@@ -68,7 +66,7 @@ class MicroImage():
         raise NotImplementedError
 
 
-class ScanLinesMicroImage(MicroImage):
+class ScanLinesMicroImage(MicroImageLarge):
 
     def __init__(self, path):
         self.dtype = "uint16" # at least
@@ -78,16 +76,16 @@ class ScanLinesMicroImage(MicroImage):
         return int(pix // numCols), int(pix % numCols)
 
     def _process(self):
-        res = [cfg.SCANLINES_CHECKBYTES] + self._make_shape_repr(self.binary_npy.shape[0], self.binary_npy.shape[1])
-        curr = 0
+        cols, rows = self.raw.size
+        res = [cfg.SCANLINES_CHECKBYTES] + self._make_shape_repr(rows, cols)
+        curr = 255
         curr_count = 0
         first_entry = True
-        for pix, val in enumerate(self.binary_npy.reshape(-1)):
+        for pix, val in enumerate(self.raw.getdata()):
             if val != curr:
-                # print(f"{pix} {curr_count}")
                 if (first_entry):
-                    row, col = self._pix_to_rc(pix, self.binary_npy.shape[1])
-                    res = res + self._make_shape_repr(row, col)
+                    r, c = self._pix_to_rc(pix, cols)
+                    res = res + self._make_shape_repr(r, c)
                     first_entry = False
                 else:
                     res.append(pix-curr_count)
@@ -96,8 +94,6 @@ class ScanLinesMicroImage(MicroImage):
             elif (not first_entry) and ((pix-curr_count) == np.iinfo(self.dtype).max):
                 res.append(0)
                 curr_count = pix
-        # for i, j in zip(res, np.array(res, dtype=self.dtype)):
-        #     print(i, j)
         return np.array(res, dtype=self.dtype)
 
     def _inverse_process(self, processed_img):
@@ -107,7 +103,7 @@ class ScanLinesMicroImage(MicroImage):
             return None
         start_idx_so_far, rows_so_far, cols_so_far = self._ret_shape_from_repr(processed_img[data_start_idx:])
         brush = 1
-        pix_so_far = rows_so_far * self.binary_npy.shape[1] + cols_so_far
+        pix_so_far = rows_so_far * num_cols + cols_so_far
         res = np.zeros((1, num_rows * num_cols), dtype=self.dtype)
         for brush_switch in processed_img[data_start_idx + start_idx_so_far:]:
             if brush_switch == 0:
@@ -119,8 +115,6 @@ class ScanLinesMicroImage(MicroImage):
                 brush = 1 - brush
         res = res.reshape(num_rows, num_cols)
         res_img = self._bin_npy_to_raw(res)
-        plt.imshow(res_img, cmap='gray')
-        plt.show()
         return res_img
 
     def save_processed_img(self, filename):
@@ -130,30 +124,31 @@ class ScanLinesMicroImage(MicroImage):
     def print_memory(self):
         print("---RAW---")
         print(f"total size of raw data (bytes): {self.raw_size}")
-
-        print("---BINARY_NPY---")
-        print(f"num elements : {self.binary_npy.size}")
-        print(f"size of each element (bytes): {self.binary_npy.itemsize}")
-        print(f"total size of binary numpy data (bytes): {self.binary_npy.nbytes}")
+        print("")
 
         print("---PROCESSED---")
         print(f"num elements : {self.processed.size}")
         print(f"size of each element (bytes): {self.processed.itemsize}")
         print(f"total size of processed data (bytes): {self.processed.nbytes}")
+        print("")
 
 
-class BitMapMicroImage(MicroImage):
+class BitMapMicroImage(MicroImageLarge):
 
     def __init__(self, path):
         self.dtype = "uint8"
         super().__init__(path)
 
     def _process(self):
-        bin_npy_vector = self.binary_npy.reshape(-1)
-        res = [cfg.BITMAP_CHECKBYTES] + self._make_shape_repr(self.binary_npy.shape[0], self.binary_npy.shape[1])
-        for i in range(0, bin_npy_vector.size, 8):
-            bin_int = int("".join(map(str, bin_npy_vector[i:i+8])), 2)
-            res.append(bin_int)
+        cols, rows = self.raw.size
+        res = [cfg.BITMAP_CHECKBYTES] + self._make_shape_repr(rows, cols)
+        buffer = []
+        for pix, val in enumerate(self.raw.getdata()):
+            buffer.append(1-val//255)
+            if len(buffer) % 8 == 0:
+                bin_int = int("".join(map(str, buffer)), 2)
+                res.append(bin_int)
+                buffer = []
         return np.array(res, dtype=self.dtype)
 
     def _inverse_process(self, processed_img):
@@ -167,8 +162,6 @@ class BitMapMicroImage(MicroImage):
             bin_npy_1d += a 
         bin_npy = np.array(bin_npy_1d, dtype="uint8").reshape(num_rows, num_cols)
         img = self._bin_npy_to_raw(bin_npy)
-        plt.imshow(img, cmap='gray')
-        plt.show()
         return img
 
     def _cvt_b10_b2(self, b10):
@@ -184,18 +177,15 @@ class BitMapMicroImage(MicroImage):
     def print_memory(self):
         print("---RAW---")
         print(f"total size of raw data (bytes): {self.raw_size}")
-
-        print("---BINARY_NPY---")
-        print(f"num elements : {self.binary_npy.size}")
-        print(f"size of each element (bytes): {self.binary_npy.itemsize}")
-        print(f"total size of binary numpy data (bytes): {self.binary_npy.nbytes}")
+        print("")
 
         print("---PROCESSED---")
         print(f"num elements : {self.processed.size}")
         print(f"size of each element (bytes): {self.processed.itemsize}")
         print(f"total size of processed data (bytes): {self.processed.nbytes}")
+        print("")
 
-class Base64MicroImage(MicroImage):
+class Base64MicroImage(MicroImageLarge):
 
     def __init__(self, path):
         super().__init__(path)
@@ -209,8 +199,6 @@ class Base64MicroImage(MicroImage):
         img_bytes = base64.b64decode(processed_img)
         buf = BytesIO(img_bytes)
         img = Image.open(buf)
-        plt.imshow(img, cmap='gray')
-        plt.show()
         return img
 
     def save_processed_img(self, filename):
@@ -221,22 +209,19 @@ class Base64MicroImage(MicroImage):
     def print_memory(self):
         print("---RAW---")
         print(f"total size of raw data (bytes): {self.raw_size}")
-
-        print("---BINARY_NPY---")
-        print(f"num elements : {self.binary_npy.size}")
-        print(f"size of each element (bytes): {self.binary_npy.itemsize}")
-        print(f"total size of binary numpy data (bytes): {self.binary_npy.nbytes}")
+        print("")
 
         print("---PROCESSED---")
         print(f"total size of processed data (bytes): {getsizeof(self.processed)}")
+        print("")
 
 if __name__ == "__main__":
     # path = os.path.join(cfg.SPECIAL_COLLECTED_DIR, "block.tiff")
-    path = os.path.join(cfg.COLLECTED_DIR, "small_sess_0.png")
+    path = os.path.join(cfg.COLLECTED_DIR, "small_sess_0_veins.tiff")
     body = ScanLinesMicroImage(path)
     # body = BitMapMicroImage(path)
     # body = Base64MicroImage(path)
     # body.show_binary_img()
-    # body.print_memory()
-    # print(body.validate_process())
+    body.print_memory()
+    print(body.validate_process())
     # body.save_processed_img("trial")

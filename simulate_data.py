@@ -11,13 +11,13 @@ sys.setrecursionlimit(10**6)
 
 class Simulator():
 
-    def __init__(self, sess_name, numSamples=1, size=(100, 100), im_save_type="png"):
+    def __init__(self, sess_name, numSamples=1, size=(100, 100), im_save_type="tiff"):
         self.sess_name = sess_name
         self.im_save_type = im_save_type
         if size[0] < cfg.MAX_ROWS and size[1] < cfg.MAX_COLS:
             self.frames = [Frame(size) for i in range(numSamples)]
-            self.bodies = self._create_all_bodies(num_runs=cfg.NUM_BODY_RUNS, thickness=cfg.BODY_THICKNESS)
-            self.veins = self._create_all_veins(num_strands=cfg.NUM_VEIN_STRANDS, thickness=cfg.VEIN_THICKNESS)
+            self.bodies = self._create_all_bodies(num_runs=cfg.NUM_BODY_RUNS, thickness=int(size[0] * cfg.BODY_THICKNESS_PERC))
+            self.veins = self._create_all_veins(num_strands=cfg.NUM_VEIN_STRANDS, thickness=int(size[0] * cfg.VEIN_THICKNESS_PERC))
         else:
             raise ValueError("Passed in size is too large")
 
@@ -179,14 +179,16 @@ if __name__ == "__main__":
     # sim = Simulator("big_sess", numSamples=5, size=(5000, 5000))
     # sim.show_all_bodies()
     # sim.save_all_bodies()
-    # sim = Simulator("med_sess", numSamples=5, size=(1000, 1000))
-    # sim.show_all_bodies()
+    sim = Simulator("med_sess", numSamples=5, size=(1000, 1000))
+    # sim.show_everything()
     # sim.save_all_bodies()
-    # sim = Simulator("small_sess", numSamples=5, size=(100, 100))
-    # sim.show_all_bodies()
-    # sim.save_all_bodies()
-    sim = Simulator("small_sess", numSamples=1, size=(1000, 1000))
+    # sim.save_all_veins()
+    sim = Simulator("small_sess", numSamples=5, size=(100, 100))
     sim.show_everything()
+    sim.save_all_bodies()
+    sim.save_all_veins()
+    # sim = Simulator("small_sess", numSamples=1, size=(1000, 1000))
+    # sim.show_everything()
     # sim.save_all_bodies()
     # sim.save_all_veins()
 
