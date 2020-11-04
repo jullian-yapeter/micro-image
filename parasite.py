@@ -10,10 +10,10 @@ Representation of a parasite's body and dye
 '''
 class Parasite():
 
-    def __init__(self, sess_name, path_to_body, path_to_veins, MicroImageType):
+    def __init__(self, sess_name, path_to_body, path_to_veins, MicroImageClass):
         self.sess_name = sess_name
-        self.body = MicroImageType(path_to_body)
-        self.veins = MicroImageType(path_to_veins)
+        self.body = MicroImageClass(path_to_body)
+        self.veins = MicroImageClass(path_to_veins)
         self.vein_body_frac = self.calc_cancer()
 
     def calc_cancer(self):

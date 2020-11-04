@@ -23,7 +23,6 @@ class Simulator():
 
     def show_everything(self):
         for bd, vs in zip(self.bodies, self.veins):
-            # plt.imshow((255-img)/2 + (255-vs), cmap='gray')
             plt.imshow(255-np.minimum(bd//5 + vs//3, 255), cmap='gray')
             plt.show()
 

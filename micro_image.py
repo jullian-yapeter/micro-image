@@ -29,7 +29,6 @@ class MicroImage():
         return Image.fromarray((1-bin_npy.astype(np.uint8))*255)
 
     def _make_shape_repr(self, rows, cols):
-        # rows, cols = bin_npy.shape[0], bin_npy.shape[1]
         rows_ls = [int(c) for c in str(rows)]
         cols_ls = [int(c) for c in str(cols)]
         return [len(rows_ls)] + [len(cols_ls)] + rows_ls  + cols_ls
@@ -43,9 +42,6 @@ class MicroImage():
     def _ret_header(self, processed):
         check_byte = processed[0]
         data_start_idx, num_rows, num_cols = self._ret_shape_from_repr(processed[1:])
-        # data_start_idx = processed[1] + processed[2] + 3
-        # num_rows = int("".join(map(str, processed[3:3 + processed[1]])))
-        # num_cols = int("".join(map(str, processed[3 + processed[1]:3 + processed[1] + processed[2]])))
         return check_byte, data_start_idx + 1, num_rows, num_cols
         
     def _process(self):
@@ -244,32 +240,3 @@ if __name__ == "__main__":
     body.print_memory()
     print(body.validate_process())
     body.save_processed_img("trial")
-
-    # def _process(self):
-    #     res = [self.binary_npy.shape[0], self.binary_npy.shape[1]]
-    #     curr = 0
-    #     for pix in range(self.binary_npy.size):
-    #         row, col = self._pix_to_rc(pix, self.binary_npy.shape[1])
-    #         if self.binary_npy[row, col] != curr:
-    #             res.append(row*self.binary_npy.shape[1]+col)
-    #             curr = self.binary_npy[row, col]
-    #     return np.array(res, dtype="uint64")
-
-    # def _inverse_process(self):
-    #     res = np.zeros((self.processed[0], self.processed[1]))
-    #     brush = 1
-    #     for start, end in zip(self.processed[2:], self.processed[3:]):
-    #         s_row, s_col = self._pix_to_rc(start, self.binary_npy.shape[1])
-    #         e_row, e_col = self._pix_to_rc(end, self.binary_npy.shape[1])
-    #         # print(f"{s_row}, {s_col}, {e_row}, {e_col}")
-    #         if s_row == e_row:
-    #             res[s_row, s_col:e_col] = brush
-    #         else:
-    #             res[s_row, s_col:] = brush
-    #             for row in range(s_row + 1, e_row):
-    #                 res[row, :] = brush
-    #             res[e_row, :e_col] = brush
-    #         brush = 1 - brush
-    #     plt.imshow((1-res)*255, cmap='gray')
-    #     plt.show()
-    #     return res
