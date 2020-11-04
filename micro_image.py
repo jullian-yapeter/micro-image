@@ -83,9 +83,6 @@ class ScanLinesMicroImage(MicroImage):
         return int(pix // numCols), int(pix % numCols)
 
     def _process(self):
-        # res = [cfg.SCANLINES_CHECKBYTES,
-        #        self.binary_npy.shape[0] // 1000, self.binary_npy.shape[0] % 1000,
-        #        self.binary_npy.shape[1] // 1000, self.binary_npy.shape[1] % 1000]
         res = [cfg.SCANLINES_CHECKBYTES] + self._make_shape_repr(self.binary_npy.shape[0], self.binary_npy.shape[1])
         curr = 0
         curr_count = 0
@@ -95,16 +92,14 @@ class ScanLinesMicroImage(MicroImage):
                 # print(f"{pix} {curr_count}")
                 if (first_entry):
                     row, col = self._pix_to_rc(pix, self.binary_npy.shape[1])
-                    res += self._make_shape_repr(row, col)
+                    res = res + self._make_shape_repr(row, col)
                     first_entry = False
                 else:
-                    if (pix-curr_count) > np.iinfo(self.dtype).max:
-                        for i in range((pix-curr_count) // np.iinfo(self.dtype).max):
-                            res.append(0)
-                        res.append((pix-curr_count) % np.iinfo(self.dtype).max)
-                    else:
-                        res.append(pix-curr_count)
+                    res.append(pix-curr_count)
                 curr = val
+                curr_count = pix
+            elif (not first_entry) and ((pix-curr_count) == np.iinfo(self.dtype).max):
+                res.append(0)
                 curr_count = pix
         # for i, j in zip(res, np.array(res, dtype=self.dtype)):
         #     print(i, j)
@@ -115,34 +110,19 @@ class ScanLinesMicroImage(MicroImage):
         if processed_img[0] != cfg.SCANLINES_CHECKBYTES:
             raise ValueError("Check bytes for scanlines inverse process are incorrect")
             return None
-        res = np.zeros((num_rows, num_cols))
         start_idx_so_far, rows_so_far, cols_so_far = self._ret_shape_from_repr(processed_img[data_start_idx:])
-        print(res.shape)
-        # print(start_idx_so_far, rows_so_far, cols_so_far)
         brush = 1
         pix_so_far = rows_so_far * self.binary_npy.shape[1] + cols_so_far
-        # print(pix_so_far)
+        res = np.zeros((1, num_rows * num_cols), dtype=self.dtype)
         for brush_switch in processed_img[data_start_idx + start_idx_so_far:]:
-            s_row, s_col = self._pix_to_rc(pix_so_far, self.binary_npy.shape[1])
             if brush_switch == 0:
-                print("hi")
-                e_row, e_col = self._pix_to_rc(pix_so_far + np.iinfo(self.dtype).max, self.binary_npy.shape[1])
-            else:
-                e_row, e_col = self._pix_to_rc(pix_so_far + brush_switch, self.binary_npy.shape[1])
-            # print(f"{s_row}, {s_col}, {e_row}, {e_col}")
-            if s_row == e_row:
-                res[s_row, s_col:e_col] = brush
-            else:
-                res[s_row, s_col:] = brush
-                for row in range(s_row + 1, e_row):
-                    res[row, :] = brush
-                res[e_row, :e_col] = brush
-            if brush_switch == 0:
+                res[0, pix_so_far : pix_so_far + np.iinfo(self.dtype).max] = brush
                 pix_so_far += np.iinfo(self.dtype).max
             else:
+                res[0, pix_so_far : pix_so_far + brush_switch] = brush
                 pix_so_far += brush_switch
-            # if (brush_switch != 0) and (prev_brush_switch != 0):
                 brush = 1 - brush
+        res = res.reshape(num_rows, num_cols)
         res_img = self._bin_npy_to_raw(res)
         plt.imshow(res_img, cmap='gray')
         plt.show()
@@ -244,7 +224,7 @@ class Base64MicroImage(MicroImage):
 
 if __name__ == "__main__":
     # path = os.path.join(cfg.SPECIAL_COLLECTED_DIR, "block.tiff")
-    path = os.path.join(cfg.COLLECTED_DIR, "med_sess_2.png")
+    path = os.path.join(cfg.COLLECTED_DIR, "med_sess_0.png")
     body = ScanLinesMicroImage(path)
     body.show_binary_img()
     body.print_memory()
