@@ -42,8 +42,8 @@ class Parasite():
 
 if __name__ == "__main__":
     par1 = Parasite("lab0",
-                    os.path.join(cfg.COLLECTED_DIR, "cancer_sess_1_rf1_body.tiff"),
-                    os.path.join(cfg.COLLECTED_DIR, "cancer_sess_1_rf1_veins.tiff"),
+                    os.path.join(cfg.COLLECTED_DIR, "lab_sess_0_rf2_body.tiff"),
+                    os.path.join(cfg.COLLECTED_DIR, "lab_sess_0_rf2_veins.tiff"),
                     ScanLinesMicroImage)
     par1.show_image()
     par1.body.print_memory()

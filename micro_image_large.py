@@ -49,7 +49,7 @@ class MicroImageLarge():
     def validate_process(self):
         self.show_raw_img()
         self.show_inversed_img()
-        return (ImageChops.difference(self.raw, self._inverse_process(self.processed)).getbbox() is None)
+        return (ImageChops.difference(self.raw, self._inverse_process(self.processed)).getbbox()) is None
 
     def show_raw_img(self):
         plt.imshow(self.raw, cmap='gray')
@@ -72,7 +72,7 @@ class MicroImageLarge():
 class ScanLinesMicroImage(MicroImageLarge):
 
     def __init__(self, path):
-        self.dtype = "uint16" # at least
+        self.dtype = cfg.SCANLINES_DTYPE # at least
         super().__init__(path)
         
     def _pix_to_rc(self, pix, numCols):
@@ -188,7 +188,7 @@ class ScanLinesMicroImage(MicroImageLarge):
 class BitMapMicroImage(MicroImageLarge):
 
     def __init__(self, path):
-        self.dtype = "uint8"
+        self.dtype = cfg.BITMAP_DTYPE
         super().__init__(path)
 
     def _process(self):

@@ -46,13 +46,13 @@ class Simulator():
         for rf in self.resize_factors:
             for i, img in enumerate(self.bodies):
                 path = os.path.join(cfg.COLLECTED_DIR, f"{self.sess_name}_{i}_rf{rf}_body.{self.im_save_type}")
-                Image.fromarray(255-img).resize((self.size[0] * rf, self.size[1] * rf)).save(path)
+                Image.fromarray(255-img).resize((self.size[0] * rf, self.size[1] * rf), resample=Image.NEAREST).save(path)
 
     def save_all_veins(self):
         for rf in self.resize_factors:
             for i, img in enumerate(self.veins):
                 path = os.path.join(cfg.COLLECTED_DIR, f"{self.sess_name}_{i}_rf{rf}_veins.{self.im_save_type}")
-                Image.fromarray(255-img).resize((self.size[0] * rf, self.size[1] * rf)).save(path)
+                Image.fromarray(255-img).resize((self.size[0] * rf, self.size[1] * rf), resample=Image.NEAREST).save(path)
 
     def _create_all_bodies(self, num_runs=3, thickness=40):
         return [self._create_body(frame, num_runs=num_runs, thickness=thickness) for frame in self.frames]
@@ -180,7 +180,7 @@ class Frame():
 
 
 if __name__ == "__main__":
-    sim = Simulator("cancer_sess", numSamples=2, size=(200, 200), resize_factors=[1, 5, 50])
+    sim = Simulator("lab_sess", numSamples=2, size=(500, 500), resize_factors=[1, 2, 4])
     sim.show_everything()
     sim.save_all_bodies()
     sim.save_all_veins()
