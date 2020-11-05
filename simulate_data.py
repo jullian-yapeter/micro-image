@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 from random import randint, choice
+from skimage.transform import resize
 import os
 import sys
 
@@ -59,10 +60,26 @@ class Simulator():
 
     def _create_body(self, frame, num_runs=3, thickness=40):
         outer_frame, inner_frame = frame.frame_to_arrays()
-        mid_pix = self._get_mid_pix(inner_frame)
+        drawing_canvas = outer_frame.copy()
+        mid_pix = self._get_mid_pix(drawing_canvas)
         for i in range(num_runs):
-            self._random_stroke_recur(inner_frame, mid_pix[0], mid_pix[1], 0, cfg.BODY_RECURSION_DEPTH_LIMIT, thickness=thickness)
-        return frame.place_inner_into_outer(outer_frame, inner_frame).astype(np.uint8)
+            self._random_stroke_recur(drawing_canvas, mid_pix[0], mid_pix[1], 0, cfg.BODY_RECURSION_DEPTH_LIMIT, thickness=thickness)
+        drawing_canvas = resize(self._trim_empty_border(drawing_canvas), inner_frame.shape)
+        return frame.place_inner_into_outer(outer_frame, drawing_canvas).astype(np.uint8)
+
+    def _trim_empty_border(self, frame):
+        rows, cols = np.any(frame, axis=1), np.any(frame, axis=0)
+        ymin, ymax = np.where(rows)[0][[0, -1]]
+        xmin, xmax = np.where(cols)[0][[0, -1]]
+        return frame[ymin:ymax+1, xmin:xmax+1]
+    
+    # def _create_body(self, frame, num_runs=3, thickness=40):
+    #     outer_frame, inner_frame = frame.frame_to_arrays()
+    #     # drawing_canvas = outer_frame.copy()
+    #     mid_pix = self._get_mid_pix(inner_frame)
+    #     for i in range(num_runs):
+    #         self._random_stroke_recur(inner_frame, mid_pix[0], mid_pix[1], 0, cfg.BODY_RECURSION_DEPTH_LIMIT, thickness=thickness)
+    #     return frame.place_inner_into_outer(outer_frame, inner_frame).astype(np.uint8)
 
     def _create_border(self, body_frame, mid_col):
         return [(mid_col - randint(1, round(body_frame.shape[1]/2)), mid_col + randint(1, round(body_frame.shape[1]/2)))
