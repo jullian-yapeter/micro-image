@@ -64,13 +64,6 @@ class Simulator():
             self._random_stroke_recur(inner_frame, mid_pix[0], mid_pix[1], 0, cfg.BODY_RECURSION_DEPTH_LIMIT, thickness=thickness)
         return frame.place_inner_into_outer(outer_frame, inner_frame).astype(np.uint8)
 
-    # def _create_body(self, frame):
-    #     outer_frame, inner_frame = frame.frame_to_arrays()
-    #     mid_pix = self._get_mid_pix(inner_frame)
-    #     border_coords = self._create_border(inner_frame, mid_pix[1])
-    #     self._fill_body(inner_frame, border_coords)
-    #     return frame.place_inner_into_outer(outer_frame, inner_frame).astype(np.uint8)
-
     def _create_border(self, body_frame, mid_col):
         return [(mid_col - randint(1, round(body_frame.shape[1]/2)), mid_col + randint(1, round(body_frame.shape[1]/2)))
                 for row in range(body_frame.shape[0])]
@@ -86,10 +79,9 @@ class Simulator():
         outer_frame, inner_frame = frame.frame_to_arrays()
         mid_pix = [sum(x) for x in zip(frame.anchor, self._get_mid_pix(inner_frame))]
         for i in range(num_strands):
-            self._random_stroke_recur(outer_frame, mid_pix[0], mid_pix[1], 0, cfg.VEIN_RECURSION_DEPTH_LIMIT, v_dir=1, thickness=thickness)
-            self._random_stroke_recur(outer_frame, mid_pix[0], mid_pix[1], 0, cfg.VEIN_RECURSION_DEPTH_LIMIT, v_dir=-1, thickness=thickness)
-            self._random_stroke_recur(outer_frame, mid_pix[0], mid_pix[1], 0, cfg.VEIN_RECURSION_DEPTH_LIMIT, h_dir=1, thickness=thickness)
-            self._random_stroke_recur(outer_frame, mid_pix[0], mid_pix[1], 0, cfg.VEIN_RECURSION_DEPTH_LIMIT, h_dir=-1, thickness=thickness)
+            for (v, h) in [(1, None), (-1, None), (None, 1), (None, -1)]:
+                self._random_stroke_recur(outer_frame, mid_pix[0], mid_pix[1], 0, cfg.VEIN_RECURSION_DEPTH_LIMIT,
+                                          v_dir=v, h_dir=h, thickness=thickness)
         return outer_frame.astype(np.uint8)
 
     def _random_stroke_recur(self, frame, row, col, r_depth, lim_depth, v_dir=None, h_dir=None, thickness=3):
@@ -132,7 +124,7 @@ class Simulator():
     #         for i in range(-1, 2, 1):
     #             for j in range(-1, 2, 1):
     #                 if (not(i == 0 and j == 0)):
-    #                     self._fill_body(body_frame, border_coords, row + i, col + j)
+    #                     self._fill_body_recur(body_frame, border_coords, row + i, col + j)
 
 
 class Frame():
@@ -182,5 +174,5 @@ class Frame():
 if __name__ == "__main__":
     sim = Simulator("lab_sess", numSamples=2, size=(500, 500), resize_factors=[1, 2, 4])
     sim.show_everything()
-    sim.save_all_bodies()
-    sim.save_all_veins()
+    # sim.save_all_bodies()
+    # sim.save_all_veins()
