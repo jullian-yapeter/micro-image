@@ -67,11 +67,14 @@ class MicroImage():
     def print_memory(self):
         raise NotImplementedError
 
+    def calc_veins_perc(self, veins_of_this_body):
+        raise NotImplementedError
+
 
 class ScanLinesMicroImage(MicroImage):
 
     def __init__(self, path):
-        self.dtype = "uint16" # at least
+        self.dtype = cfg.SCANLINES_DTYPE
         super().__init__(path)
         
     def _pix_to_rc(self, pix, numCols):
@@ -130,22 +133,28 @@ class ScanLinesMicroImage(MicroImage):
     def print_memory(self):
         print("---RAW---")
         print(f"total size of raw data (bytes): {self.raw_size}")
+        print("")
 
         print("---BINARY_NPY---")
         print(f"num elements : {self.binary_npy.size}")
         print(f"size of each element (bytes): {self.binary_npy.itemsize}")
         print(f"total size of binary numpy data (bytes): {self.binary_npy.nbytes}")
+        print("")
 
         print("---PROCESSED---")
         print(f"num elements : {self.processed.size}")
         print(f"size of each element (bytes): {self.processed.itemsize}")
         print(f"total size of processed data (bytes): {self.processed.nbytes}")
+        print("")
+
+    def calc_veins_perc(self, veins_of_this_body):
+        return NotImplementedError
 
 
 class BitMapMicroImage(MicroImage):
 
     def __init__(self, path):
-        self.dtype = "uint8"
+        self.dtype = cfg.BITMAP_DTYPE
         super().__init__(path)
 
     def _process(self):
@@ -184,16 +193,22 @@ class BitMapMicroImage(MicroImage):
     def print_memory(self):
         print("---RAW---")
         print(f"total size of raw data (bytes): {self.raw_size}")
+        print("")
 
         print("---BINARY_NPY---")
         print(f"num elements : {self.binary_npy.size}")
         print(f"size of each element (bytes): {self.binary_npy.itemsize}")
         print(f"total size of binary numpy data (bytes): {self.binary_npy.nbytes}")
+        print("")
 
         print("---PROCESSED---")
         print(f"num elements : {self.processed.size}")
         print(f"size of each element (bytes): {self.processed.itemsize}")
         print(f"total size of processed data (bytes): {self.processed.nbytes}")
+        print("")
+    
+    def calc_veins_perc(self, veins_of_this_body):
+        return np.multiply(self.binary_npy, veins_of_this_body.binary_npy).sum() / self.binary_npy.size
 
 class Base64MicroImage(MicroImage):
 
@@ -221,14 +236,20 @@ class Base64MicroImage(MicroImage):
     def print_memory(self):
         print("---RAW---")
         print(f"total size of raw data (bytes): {self.raw_size}")
+        print("")
 
         print("---BINARY_NPY---")
         print(f"num elements : {self.binary_npy.size}")
         print(f"size of each element (bytes): {self.binary_npy.itemsize}")
         print(f"total size of binary numpy data (bytes): {self.binary_npy.nbytes}")
+        print("")
 
         print("---PROCESSED---")
         print(f"total size of processed data (bytes): {getsizeof(self.processed)}")
+        print("")
+    
+    def calc_veins_perc(self, veins_of_this_body):
+        return NotImplementedError
 
 if __name__ == "__main__":
     # path = os.path.join(cfg.SPECIAL_COLLECTED_DIR, "block.tiff")
