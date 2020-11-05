@@ -47,8 +47,6 @@ class MicroImageLarge():
         raise NotImplementedError
 
     def validate_process(self):
-        self.show_raw_img()
-        self.show_inversed_img()
         return (ImageChops.difference(self.raw, self._inverse_process(self.processed)).getbbox()) is None
 
     def show_raw_img(self):

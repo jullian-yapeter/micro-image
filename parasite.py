@@ -42,16 +42,16 @@ class Parasite():
 
 if __name__ == "__main__":
     par1 = Parasite("lab0",
-                    os.path.join(cfg.COLLECTED_DIR, "lab_sess_0_rf2_body.tiff"),
-                    os.path.join(cfg.COLLECTED_DIR, "lab_sess_0_rf2_veins.tiff"),
+                    os.path.join(cfg.COLLECTED_DIR, "lab_sess_1_rf4_body.tiff"),
+                    os.path.join(cfg.COLLECTED_DIR, "lab_sess_1_rf4_veins.tiff"),
                     ScanLinesMicroImage)
     par1.show_image()
     par1.body.print_memory()
     par1.veins.print_memory()
-    print(par1.body.validate_process())
-    print(par1.veins.validate_process())
-    print(par1.veins_body_frac)
-    print(par1.has_cancer())
+    print("Body Process & Inverse Validity:", par1.body.validate_process())
+    print("Veins Process & Inverse Validity:", par1.veins.validate_process())
+    print("Veins to Body %:", par1.veins_body_frac * 100)
+    print("Has cancer:", par1.has_cancer())
     # par2 = Parasite("lab1",
     #                 os.path.join(cfg.COLLECTED_DIR, "small_sess_0_body.tiff"),
     #                 os.path.join(cfg.COLLECTED_DIR, "small_sess_0_veins.tiff"),
