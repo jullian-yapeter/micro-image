@@ -253,11 +253,8 @@ class Base64MicroImage(MicroImage):
         return NotImplementedError
 
 if __name__ == "__main__":
-    # path = os.path.join(cfg.SPECIAL_COLLECTED_DIR, "block.tiff")
     path = os.path.join(cfg.COLLECTED_DIR, "small_sess_0.png")
     body = ScanLinesMicroImage(path)
-    # body = BitMapMicroImage(path)
-    # body = Base64MicroImage(path)
     # body.show_binary_img()
     # body.print_memory()
     # print(body.validate_process())

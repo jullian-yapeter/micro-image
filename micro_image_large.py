@@ -70,7 +70,7 @@ class MicroImageLarge():
 class ScanLinesMicroImage(MicroImageLarge):
 
     def __init__(self, path):
-        self.dtype = cfg.SCANLINES_DTYPE # at least
+        self.dtype = cfg.SCANLINES_DTYPE
         super().__init__(path)
         
     def _pix_to_rc(self, pix, numCols):
@@ -161,26 +161,6 @@ class ScanLinesMicroImage(MicroImageLarge):
                 brush = 1 - brush
         print(valid_vein, num_body_pix)
         return valid_vein / num_body_pix
-
-    # def calc_veins_perc(self, veins_of_this_body):
-    #     check_byte, data_start_idx, num_rows, num_cols = self._ret_header(self.processed)
-    #     start_idx_so_far, rows_so_far, cols_so_far = self._ret_shape_from_repr(self.processed[data_start_idx:])
-    #     brush = 1
-    #     pix_so_far = rows_so_far * num_cols + cols_so_far
-    #     # _, bitmap_start_idx, _, _ = self._ret_header(veins_of_this_body.processed)
-    #     total = 0
-    #     v = ((255-np.asarray(veins_of_this_body.raw)) / 255).astype(np.uint8).reshape(-1)
-    #     for brush_switch in self.processed[data_start_idx + start_idx_so_far:]:
-    #         if brush_switch == 0:
-    #             if brush==1:
-    #                 total += np.sum(v[pix_so_far :  pix_so_far + np.iinfo(self.dtype).max])
-    #             pix_so_far += np.iinfo(self.dtype).max
-    #         else:
-    #             if brush==1:
-    #                 total += np.sum(v[pix_so_far : pix_so_far + brush_switch])
-    #             pix_so_far += brush_switch
-    #             brush = 1 - brush
-    #     return total/(num_rows * num_cols)
 
 
 class BitMapMicroImage(MicroImageLarge):
@@ -280,12 +260,7 @@ class Base64MicroImage(MicroImageLarge):
         return NotImplementedError
 
 if __name__ == "__main__":
-    # path = os.path.join(cfg.SPECIAL_COLLECTED_DIR, "block.tiff")
     path = os.path.join(cfg.COLLECTED_DIR, "small_sess_0_veins.tiff")
     body = ScanLinesMicroImage(path)
-    # body = BitMapMicroImage(path)
-    # body = Base64MicroImage(path)
-    # body.show_binary_img()
     body.print_memory()
     print(body.validate_process())
-    # body.save_processed_img("trial")

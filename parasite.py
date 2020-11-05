@@ -29,10 +29,12 @@ class Parasite():
         plt.show()
 
     def save_body_data(self):
+        print("BODY DATA :")
         self.body.print_memory()
         self.body.save_processed_img(self.sess_name + "_body")
 
     def show_veins_data(self):
+        print("VEINS DATA :")
         self.veins.print_memory()
         self.veins.save_processed_img(self.sess_name + "_veins")
 
@@ -41,31 +43,13 @@ class Parasite():
         self.show_veins_data()
 
 if __name__ == "__main__":
-    par1 = Parasite("lab0",
-                    os.path.join(cfg.COLLECTED_DIR, "lab_sess_1_rf4_body.tiff"),
-                    os.path.join(cfg.COLLECTED_DIR, "lab_sess_1_rf4_veins.tiff"),
+    par1 = Parasite("lab_sess_0",
+                    os.path.join(cfg.COLLECTED_DIR, "lab_sess_0_rf4_body.tiff"),
+                    os.path.join(cfg.COLLECTED_DIR, "lab_sess_0_rf4_veins.tiff"),
                     ScanLinesMicroImage)
     par1.show_image()
-    par1.body.print_memory()
-    par1.veins.print_memory()
     print("Body Process & Inverse Validity:", par1.body.validate_process())
     print("Veins Process & Inverse Validity:", par1.veins.validate_process())
     print("Veins to Body %:", par1.veins_body_frac * 100)
     print("Has cancer:", par1.has_cancer())
-    # par2 = Parasite("lab1",
-    #                 os.path.join(cfg.COLLECTED_DIR, "small_sess_0_body.tiff"),
-    #                 os.path.join(cfg.COLLECTED_DIR, "small_sess_0_veins.tiff"),
-    #                 ScanLinesMicroImage)
-    # par1.save_data()
-    # par1.show_image()
-    # print(par1.veins_body_frac)
-    # print(par1.has_cancer())
-    # print(par1.body.raw)
-    # print(sys.getsizeof(par1.body.raw.getdata()))
-    # data_seq = par1.body.raw.getdata()
-    # for i in range(len(data_seq)):
-    #     print(data_seq[i])
-    # print(par1.body.raw.getpixel((0,0)))
-    # print(sys.getsizeof(par1.body.processed))
-    # print(sys.getsizeof(par2.body.processed))
-    # print(sys.getsizeof(par1.body.raw.tobitmap()))
+    par1.save_data()
