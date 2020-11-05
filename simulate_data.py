@@ -11,13 +11,15 @@ sys.setrecursionlimit(10**6)
 
 class Simulator():
 
-    def __init__(self, sess_name, numSamples=1, size=(100, 100), im_save_type="tiff"):
+    def __init__(self, sess_name, numSamples=1, size=(100, 100), im_save_type="tiff", resize_factors=[1]):
         self.sess_name = sess_name
         self.im_save_type = im_save_type
         if size[0] < cfg.MAX_ROWS and size[1] < cfg.MAX_COLS:
             self.frames = [Frame(size) for i in range(numSamples)]
             self.bodies = self._create_all_bodies(num_runs=cfg.NUM_BODY_RUNS, thickness=int(size[0] * cfg.BODY_THICKNESS_PERC))
             self.veins = self._create_all_veins(num_strands=cfg.NUM_VEIN_STRANDS, thickness=int(size[0] * cfg.VEIN_THICKNESS_PERC))
+            self.size = size
+            self.resize_factors = resize_factors
         else:
             raise ValueError("Passed in size is too large")
 
@@ -41,14 +43,16 @@ class Simulator():
             plt.show()
 
     def save_all_bodies(self):
-        for i, img in enumerate(self.bodies):
-            path = os.path.join(cfg.COLLECTED_DIR, f"{self.sess_name}_{i}_body.{self.im_save_type}")
-            Image.fromarray(255-img).save(path)
+        for rf in self.resize_factors:
+            for i, img in enumerate(self.bodies):
+                path = os.path.join(cfg.COLLECTED_DIR, f"{self.sess_name}_{i}_rf{rf}_body.{self.im_save_type}")
+                Image.fromarray(255-img).resize((self.size[0] * rf, self.size[1] * rf)).save(path)
 
     def save_all_veins(self):
-        for i, img in enumerate(self.veins):
-            path = os.path.join(cfg.COLLECTED_DIR, f"{self.sess_name}_{i}_veins.{self.im_save_type}")
-            Image.fromarray(255-img).save(path)
+        for rf in self.resize_factors:
+            for i, img in enumerate(self.veins):
+                path = os.path.join(cfg.COLLECTED_DIR, f"{self.sess_name}_{i}_rf{rf}_veins.{self.im_save_type}")
+                Image.fromarray(255-img).resize((self.size[0] * rf, self.size[1] * rf)).save(path)
 
     def _create_all_bodies(self, num_runs=3, thickness=40):
         return [self._create_body(frame, num_runs=num_runs, thickness=thickness) for frame in self.frames]
@@ -76,7 +80,7 @@ class Simulator():
             body_frame[row, border_coords[row][0]: border_coords[row][1] + 1] = 255
 
     def _create_all_veins(self, num_strands=2, thickness=3):
-        return [self._create_veins(frame, num_strands=num_strands) for frame in self.frames]
+        return [self._create_veins(frame, num_strands=num_strands, thickness=thickness) for frame in self.frames]
 
     def _create_veins(self, frame, num_strands=2, thickness=3):
         outer_frame, inner_frame = frame.frame_to_arrays()
@@ -176,7 +180,7 @@ class Frame():
 
 
 if __name__ == "__main__":
-    sim = Simulator("big_sess", numSamples=2, size=(5000, 5000))
+    sim = Simulator("cancer_sess", numSamples=2, size=(200, 200), resize_factors=[1, 5, 50])
     sim.show_everything()
     sim.save_all_bodies()
     sim.save_all_veins()

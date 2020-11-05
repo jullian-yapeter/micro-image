@@ -141,24 +141,28 @@ class ScanLinesMicroImage(MicroImageLarge):
         brush = 1
         pix_so_far = rows_so_far * num_cols + cols_so_far
         # _, bitmap_start_idx, _, _ = self._ret_header(veins_of_this_body.processed)
-        total = 0
+        valid_vein = 0
+        num_body_pix = 0
         v = veins_of_this_body.raw.getdata()
         temp = []
         for brush_switch in self.processed[data_start_idx + start_idx_so_far:]:
             if brush_switch == 0:
                 if brush==1:
                     temp = np.array([v[pix_so_far + i] for i in range(np.iinfo(self.dtype).max)])
-                    total += np.sum((255-temp)//255)
+                    valid_vein += np.sum((255-temp)//255)
                     temp = []
+                    num_body_pix += np.iinfo(self.dtype).max
                 pix_so_far += np.iinfo(self.dtype).max
             else:
                 if brush==1:
                     temp = np.array([v[pix_so_far + i] for i in range(brush_switch)])
-                    total += np.sum((255-temp)//255)
+                    valid_vein += np.sum((255-temp)//255)
                     temp = []
+                    num_body_pix += brush_switch
                 pix_so_far += brush_switch
                 brush = 1 - brush
-        return total/(num_rows * num_cols)
+        print(valid_vein, num_body_pix)
+        return valid_vein / num_body_pix
 
     # def calc_veins_perc(self, veins_of_this_body):
     #     check_byte, data_start_idx, num_rows, num_cols = self._ret_header(self.processed)
@@ -235,11 +239,14 @@ class BitMapMicroImage(MicroImageLarge):
 
     def calc_veins_perc(self, veins_of_this_body):
         check_byte, data_start_idx, num_rows, num_cols = self._ret_header(self.processed)
-        total = 0
+        valid_vein = 0
+        num_body_pix = 0
         cols, rows = self.raw.size
         for body_pix, vein_pix in zip(self.processed[data_start_idx:], veins_of_this_body.processed[data_start_idx:]):
-            total += sum([int(c) for c in bin(body_pix & vein_pix)[2:]])
-        return total/(rows * cols)
+            valid_vein += sum([int(c) for c in bin(body_pix & vein_pix)[2:]])
+            num_body_pix += sum([int(c) for c in bin(body_pix)[2:]])
+        print(valid_vein, num_body_pix)
+        return valid_vein / num_body_pix
 
 class Base64MicroImage(MicroImageLarge):
 

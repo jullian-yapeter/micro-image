@@ -17,6 +17,7 @@ class MicroImage():
         self.raw_size = os.path.getsize(path)
         self.raw = self._read_img(path)
         self.binary_npy = self._raw_to_bin_npy(self.raw) # 1 for subject and 0 for background
+        print(self.binary_npy.sum())
         self.processed = self._process()
 
     def _read_img(self, path):

@@ -15,7 +15,7 @@ class Parasite():
     def __init__(self, sess_name, path_to_body, path_to_veins, MicroImageClass):
         self.sess_name = sess_name
         self.body = MicroImageClass(path_to_body)
-        self.veins = BitMapMicroImage(path_to_veins)
+        self.veins = MicroImageClass(path_to_veins)
         self.veins_body_frac = self.calc_cancer()
 
     def calc_cancer(self):
@@ -42,8 +42,8 @@ class Parasite():
 
 if __name__ == "__main__":
     par1 = Parasite("lab0",
-                    os.path.join(cfg.COLLECTED_DIR, "big_sess_0_body.tiff"),
-                    os.path.join(cfg.COLLECTED_DIR, "big_sess_0_veins.tiff"),
+                    os.path.join(cfg.COLLECTED_DIR, "cancer_sess_1_rf1_body.tiff"),
+                    os.path.join(cfg.COLLECTED_DIR, "cancer_sess_1_rf1_veins.tiff"),
                     ScanLinesMicroImage)
     par1.show_image()
     par1.body.print_memory()
