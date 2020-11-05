@@ -14,6 +14,7 @@ class Parasite():
 
     def __init__(self, sess_name, body_img_path, veins_img_path, MicroImageClass):
         self.sess_name = sess_name
+        self.mic_name = MicroImageClass.name
         self.body = MicroImageClass(body_img_path)
         self.veins = MicroImageClass(veins_img_path)
         self.veins_body_frac = self.calc_cancer()
@@ -31,12 +32,12 @@ class Parasite():
     def save_body_data(self):
         print("BODY DATA :")
         self.body.print_memory()
-        self.body.save_processed_img(self.sess_name + "_body")
+        self.body.save_processed_img(self.sess_name + "_body_" + self.mic_name)
 
     def show_veins_data(self):
         print("VEINS DATA :")
         self.veins.print_memory()
-        self.veins.save_processed_img(self.sess_name + "_veins")
+        self.veins.save_processed_img(self.sess_name + "_veins_" + self.mic_name)
 
     def save_data(self):
         self.save_body_data()
@@ -46,7 +47,7 @@ if __name__ == "__main__":
     par1 = Parasite("lab_sess_0",
                     os.path.join(cfg.COLLECTED_DIR, "lab_sess_0_rf4_body.tiff"),
                     os.path.join(cfg.COLLECTED_DIR, "lab_sess_0_rf4_veins.tiff"),
-                    ScanLinesMicroImage)
+                    BitMapMicroImage)
     par1.show_image()
     print("Body Process & Inverse Validity:", par1.body.validate_process())
     print("Veins Process & Inverse Validity:", par1.veins.validate_process())

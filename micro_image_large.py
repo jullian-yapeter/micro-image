@@ -69,8 +69,10 @@ class MicroImageLarge():
 
 class ScanLinesMicroImage(MicroImageLarge):
 
+    name = "scanlines"
+    dtype = cfg.SCANLINES_DTYPE
+
     def __init__(self, path):
-        self.dtype = cfg.SCANLINES_DTYPE
         super().__init__(path)
         
     def _pix_to_rc(self, pix, numCols):
@@ -159,14 +161,15 @@ class ScanLinesMicroImage(MicroImageLarge):
                     num_body_pix += brush_switch
                 pix_so_far += brush_switch
                 brush = 1 - brush
-        print(valid_vein, num_body_pix)
         return valid_vein / num_body_pix
 
 
 class BitMapMicroImage(MicroImageLarge):
 
+    name = "bitmap"
+    dtype = cfg.BITMAP_DTYPE
+
     def __init__(self, path):
-        self.dtype = cfg.BITMAP_DTYPE
         super().__init__(path)
 
     def _process(self):
