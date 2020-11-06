@@ -69,7 +69,7 @@ class MicroImage():
         raise NotImplementedError
 
     def calc_veins_perc(self, veins_of_this_body):
-        raise NotImplementedError
+        return np.multiply(self.binary_npy, veins_of_this_body.binary_npy).sum() / self.binary_npy.sum()
 
 
 class ScanLinesMicroImage(MicroImage):
@@ -148,9 +148,6 @@ class ScanLinesMicroImage(MicroImage):
         print(f"total size of processed data (bytes): {self.processed.nbytes}")
         print("")
 
-    def calc_veins_perc(self, veins_of_this_body):
-        return NotImplementedError
-
 
 class BitMapMicroImage(MicroImage):
 
@@ -207,9 +204,6 @@ class BitMapMicroImage(MicroImage):
         print(f"size of each element (bytes): {self.processed.itemsize}")
         print(f"total size of processed data (bytes): {self.processed.nbytes}")
         print("")
-    
-    def calc_veins_perc(self, veins_of_this_body):
-        return np.multiply(self.binary_npy, veins_of_this_body.binary_npy).sum() / self.binary_npy.size
 
 class Base64MicroImage(MicroImage):
 
@@ -248,9 +242,6 @@ class Base64MicroImage(MicroImage):
         print("---PROCESSED---")
         print(f"total size of processed data (bytes): {getsizeof(self.processed)}")
         print("")
-    
-    def calc_veins_perc(self, veins_of_this_body):
-        return NotImplementedError
 
 if __name__ == "__main__":
     path = os.path.join(cfg.COLLECTED_DIR, "small_sess_0.png")
