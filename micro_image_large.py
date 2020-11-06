@@ -95,7 +95,10 @@ class MicroImageLarge():
     def calc_veins_perc(self, veins_of_this_body):
         return NotImplementedError
 
-
+'''
+ScanLinesMicroImage class handles the loading, processing, and process validation of parasite images.
+It is a subclass of MicroImageLarge class.
+'''
 class ScanLinesMicroImage(MicroImageLarge):
 
     name = "scanlines" # Name of MicroImageLarge subclass
@@ -104,18 +107,24 @@ class ScanLinesMicroImage(MicroImageLarge):
     def __init__(self, path):
         super().__init__(path)
         
+    # helper function to convert a pixel index to row and col number
+    # E.g for a 10x10 image, pixel index 23 will be row=2 col=3
     def _pix_to_rc(self, pix, numCols):
         return int(pix // numCols), int(pix % numCols)
 
+    # Process the image using the ScanLines method
+    # Taking a scan line approach, record the number of pixels before a pixel value switches from either 0 to 255 or
+    # 255 to 0. Even handles cases where the number of pixels before the next switch is larger than what can fit in 
+    # the dtype.
     def _process(self):
         cols, rows = self.raw.size
-        res = [cfg.SCANLINES_CHECKBYTES] + self._make_shape_repr(rows, cols)
+        res = [cfg.SCANLINES_CHECKBYTES] + self._make_shape_repr(rows, cols) # Pack check byte and image size
         curr = 255
         curr_count = 0
         first_entry = True
         for pix, val in enumerate(self.raw.getdata()):
-            if val != curr:
-                if (first_entry):
+            if val != curr: # value switch occurred
+                if (first_entry): # On first entry, save a lot of memory by storing rows and cols instead of num pixels
                     r, c = self._pix_to_rc(pix, cols)
                     res = res + self._make_shape_repr(r, c)
                     first_entry = False
@@ -123,36 +132,43 @@ class ScanLinesMicroImage(MicroImageLarge):
                     res.append(pix-curr_count)
                 curr = val
                 curr_count = pix
-            elif (not first_entry) and ((pix-curr_count) == np.iinfo(self.dtype).max):
-                res.append(0)
+            elif (not first_entry) and ((pix-curr_count) == np.iinfo(self.dtype).max): # max out dtype before a switch
+                res.append(0) # flag it with a zero
                 curr_count = pix
         return np.array(res, dtype=self.dtype)
 
+    # Inverse of _process, turns a compressed numpy array to a Pillow image
+    # Parameters:
+    # processed_img: result of _process()
     def _inverse_process(self, processed_img):
-        check_byte, data_start_idx, num_rows, num_cols = self._ret_header(processed_img)
-        if processed_img[0] != cfg.SCANLINES_CHECKBYTES:
+        check_byte, data_start_idx, num_rows, num_cols = self._ret_header(processed_img) # unpack header
+        if processed_img[0] != cfg.SCANLINES_CHECKBYTES: # Ensure correct checbytes
             raise ValueError("Check bytes for scanlines inverse process are incorrect")
             return None
         start_idx_so_far, rows_so_far, cols_so_far = self._ret_shape_from_repr(processed_img[data_start_idx:])
-        brush = 1
+        brush = 1 # value with which to draw the scan line
         pix_so_far = rows_so_far * num_cols + cols_so_far
         res = np.zeros((1, num_rows * num_cols), dtype=self.dtype)
         for brush_switch in processed_img[data_start_idx + start_idx_so_far:]:
-            if brush_switch == 0:
+            if brush_switch == 0: # in the case where a dtype max out occurred
                 res[0, pix_so_far : pix_so_far + np.iinfo(self.dtype).max] = brush
                 pix_so_far += np.iinfo(self.dtype).max
             else:
                 res[0, pix_so_far : pix_so_far + brush_switch] = brush
                 pix_so_far += brush_switch
                 brush = 1 - brush
-        res = res.reshape(num_rows, num_cols)
-        res_img = self._bin_npy_to_raw(res)
+        res = res.reshape(num_rows, num_cols) # res is now a binary numpy (COULD BE USEFUL FOR FUTURE)
+        res_img = self._bin_npy_to_raw(res) # convert binary numpy to Pillow image
         return res_img
 
+    # saves the processed image
+    # Parameters:
+    # filename: the filename with which to save the processed image
     def save_processed_img(self, filename):
         path = os.path.join(cfg.PROCESSED_DIR, f"{filename}.npy")
         np.save(path, self.processed)
 
+    # print the memory usage of the raw and processed images, as well as the compression rate
     def print_memory(self):
         print("---RAW---")
         print(f"total size of raw data (bytes): {self.raw_size}")
@@ -165,14 +181,15 @@ class ScanLinesMicroImage(MicroImageLarge):
         print(f"Percentage of original size (%): {self.processed.nbytes / self.raw_size}")
         print("")
 
+    # calculate the percentage of veins pixels within the body as it relates to the whole body
+    # Use ScanLines processed body image and Pillow image generator functionality of veins image
     def calc_veins_perc(self, veins_of_this_body):
         check_byte, data_start_idx, num_rows, num_cols = self._ret_header(self.processed)
         start_idx_so_far, rows_so_far, cols_so_far = self._ret_shape_from_repr(self.processed[data_start_idx:])
-        brush = 1
+        brush = 1 # value of the scan line
         pix_so_far = rows_so_far * num_cols + cols_so_far
-        # _, bitmap_start_idx, _, _ = self._ret_header(veins_of_this_body.processed)
-        valid_vein = 0
-        num_body_pix = 0
+        valid_vein = 0 # Number of vein pixels that are within the body of the parasite
+        num_body_pix = 0 # Keep track of number of body pixels
         v = veins_of_this_body.raw.getdata()
         temp = []
         for brush_switch in self.processed[data_start_idx + start_idx_so_far:]:
@@ -191,9 +208,12 @@ class ScanLinesMicroImage(MicroImageLarge):
                     num_body_pix += brush_switch
                 pix_so_far += brush_switch
                 brush = 1 - brush
-        return valid_vein / num_body_pix
+        return valid_vein / num_body_pix # return fraction of vein-in-body to body
 
-
+'''
+BitMapMicroImage class handles the loading, processing, and process validation of parasite images.
+It is a subclass of MicroImageLarge class.
+'''
 class BitMapMicroImage(MicroImageLarge):
 
     name = "bitmap" # Name of MicroImageLarge subclass
@@ -202,18 +222,24 @@ class BitMapMicroImage(MicroImageLarge):
     def __init__(self, path):
         super().__init__(path)
 
+    # Process the image using the BitMap method
+    # Converts the image into a series of bits, 1 to represent a positive pixel and 0 to represent a background pixel.
+    # Also packs in a header of check byte and size of original image
     def _process(self):
         cols, rows = self.raw.size
         res = [cfg.BITMAP_CHECKBYTES] + self._make_shape_repr(rows, cols)
         buffer = []
         for pix, val in enumerate(self.raw.getdata()):
             buffer.append(1-val//255)
-            if len(buffer) % 8 == 0:
-                bin_int = int("".join(map(str, buffer)), 2)
+            if len(buffer) % 8 == 0: # for every packet of 8 pixels
+                bin_int = int("".join(map(str, buffer)), 2) # convert the base 2 value to base 10
                 res.append(bin_int)
                 buffer = []
         return np.array(res, dtype=self.dtype)
 
+    # Inverse of _process, turns a compressed numpy array to a Pillow image
+    # Parameters:
+    # processed_img: result of _process()
     def _inverse_process(self, processed_img):
         check_byte, data_start_idx, num_rows, num_cols = self._ret_header(processed_img)
         if check_byte != cfg.BITMAP_CHECKBYTES:
@@ -221,22 +247,27 @@ class BitMapMicroImage(MicroImageLarge):
             return None
         bin_npy_1d = []
         for pix, val in enumerate(self.processed[data_start_idx:]):
-            a = self._cvt_b10_b2(val)
+            a = self._cvt_b10_b2(val) # convert each base 10 int to base 2
             bin_npy_1d += a 
-        bin_npy = np.array(bin_npy_1d, dtype="uint8").reshape(num_rows, num_cols)
-        img = self._bin_npy_to_raw(bin_npy)
+        bin_npy = np.array(bin_npy_1d, dtype=cfg.BITMAP_DTYPE).reshape(num_rows, num_cols)
+        img = self._bin_npy_to_raw(bin_npy) # convert numpy to Pillow image
         return img
 
+    # Helper function to convert base 10 number to an array of 1s and 0s (assumes uint8)
     def _cvt_b10_b2(self, b10):
         if b10 == 0:
             return [0] * 8
         b2 = [int(char) for char in bin(int(b10))[2:]]
         return [0] * (8 - len(b2)) + b2
     
+    # saves the processed image
+    # Parameters:
+    # filename: the filename with which to save the processed image
     def save_processed_img(self, filename):
         path = os.path.join(cfg.PROCESSED_DIR, f"{filename}.npy")
         np.save(path, self.processed)
 
+    # print the memory usage of the raw and processed images, as well as the compression rate
     def print_memory(self):
         print("---RAW---")
         print(f"total size of raw data (bytes): {self.raw_size}")
@@ -249,6 +280,8 @@ class BitMapMicroImage(MicroImageLarge):
         print(f"Percentage of original size (%): {self.processed.nbytes / self.raw_size}")
         print("")
 
+    # calculate the percentage of veins pixels within the body as it relates to the whole body
+    # Use BitMap processed image of body and and BitMap processed image of veins
     def calc_veins_perc(self, veins_of_this_body):
         check_byte, data_start_idx, num_rows, num_cols = self._ret_header(self.processed)
         valid_vein = 0
@@ -260,6 +293,7 @@ class BitMapMicroImage(MicroImageLarge):
         print(valid_vein, num_body_pix)
         return valid_vein / num_body_pix
 
+# Auxiliary class to show how this framework can be extended
 class Base64MicroImage(MicroImageLarge):
 
     def __init__(self, path):
