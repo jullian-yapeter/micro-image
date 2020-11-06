@@ -101,8 +101,17 @@ class Simulator():
             self._random_stroke_recur(drawing_canvas, mid_pix[0], mid_pix[1], 0,
                                       cfg.BODY_RECURSION_DEPTH_LIMIT, thickness=thickness)
         # Resize the body drawing to zoom fit exactly the generate inner frame (Ensure body is 25% of frame)
-        drawing_canvas = resize(self._trim_empty_border(drawing_canvas), inner_frame.shape)
+        drawing_canvas = resize(self._trim_empty_border(drawing_canvas), inner_frame.shape, order=0, mode='reflect',
+                                cval=0, clip=True, preserve_range=True, anti_aliasing=False, anti_aliasing_sigma=None)
         return frame.place_inner_into_outer(outer_frame, drawing_canvas).astype(np.uint8)
+
+    # def _create_body(self, frame, num_runs=3, thickness=40):
+    #     outer_frame, inner_frame = frame.frame_to_arrays()
+    #     mid_pix = self._get_mid_pix(inner_frame)
+    #     for i in range(num_runs):
+    #         self._random_stroke_recur(inner_frame, mid_pix[0], mid_pix[1], 0,
+    #                                   cfg.BODY_RECURSION_DEPTH_LIMIT, thickness=thickness)
+    #     return frame.place_inner_into_outer(outer_frame, inner_frame).astype(np.uint8)
 
     # helper function to trim off the empty rows and columns untouched by the recursive drawing brush
     # Parameters:
@@ -273,3 +282,16 @@ class Frame():
         plt.title(str("{:.2f}".format(self.innerf_area_perc())))
         plt.show()
 
+if __name__=="__main__":
+
+    session_name = "lab_sess"
+    '''
+    First, simulate some data using the Simulator class, upholding all rules given by Dragonfruit AI (i.e. body makes
+    up >=25% of frame)
+    '''
+    # Simulator takes as argument:
+    # session name, number of parasites to render, the size of the render, a list of size multipliers
+    sim = Simulator(session_name, numSamples=1, size=(500, 500), resize_factors=[1])
+    sim.show_all_frames() # Show the generated frames in which to draw the parasite
+    sim.show_everything() # Show superimposed images of the parasite body and the corresponding veins
+    sim.save_all_data() # Saves the rendered body and veins images as uncompressed TIFFs

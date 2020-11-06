@@ -69,8 +69,6 @@ class MicroImageLarge():
 
     # Performs a validation sequence that checks for differences between the raw Pillow
     def validate_process(self):
-        self.show_raw_img()
-        self.show_inversed_img()
         return (ImageChops.difference(self.raw, self._inverse_process(self.processed)).getbbox()) is None
 
     # Shows the raw image
@@ -292,7 +290,6 @@ class BitMapMicroImage(MicroImageLarge):
         for body_pix, vein_pix in zip(self.processed[data_start_idx:], veins_of_this_body.processed[data_start_idx:]):
             valid_vein += sum([int(c) for c in bin(body_pix & vein_pix)[2:]])
             num_body_pix += sum([int(c) for c in bin(body_pix)[2:]])
-        print(valid_vein, num_body_pix)
         return valid_vein / num_body_pix
 
 # Auxiliary class to show how this framework can be extended

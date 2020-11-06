@@ -55,3 +55,19 @@ class Parasite():
     def save_data(self):
         self.save_body_data()
         self.show_veins_data()
+
+if __name__=="__main__":
+    
+    par1 = Parasite("lab0",
+                    os.path.join(cfg.COLLECTED_DIR, "lab_sess_0_rf1_veins.tiff"),
+                    os.path.join(cfg.COLLECTED_DIR, "lab_sess_0_rf1_body.tiff"),
+                    BitMapMicroImage)
+    
+    par1.show_image()
+    # Perform validation routines that ensure raw image = inv_process(process(raw_image))
+    print("Body Process & Inverse Validity:", par1.body.validate_process())
+    print("Veins Process & Inverse Validity:", par1.veins.validate_process())
+    # Output the number of vein pixels within the body as a percentage of the total number of body pixels
+    print("Veins to Body %:", par1.veins_body_frac * 100)
+    # Output whether the current parasite has cancer
+    print("Has cancer:", par1.has_cancer())
