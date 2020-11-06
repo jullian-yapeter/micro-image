@@ -2,6 +2,7 @@
 ## by Jullian Yapeter
 
 ### **The Scenario**
+
 In this challenge, we are working with a researcher to diagnose cancer within microorganisms, referred to as parasites. 
 Each parasite is photographed twice under an electron microscope (100,000 x 100,000 pixels): the first image shows the 
 parasite's body , and the second image shows the parasite's veins (body and veins pixels are black and background 
@@ -68,3 +69,86 @@ number regardless of technique.
 MicroImageLarge and its subclasses have been implemented in such a way where they can perform their functions without 
 loading the whole raw image at once, thus it saves RAM.
 
+### **Running the Test Program**
+
+1. Clone this repository, and `cd` into it.
+2. Run `pip install requirements`.
+3. Create the following directories: `data`, `data/collected`, `data/processed`. They will hold the results of 
+   simulation and of processing.
+4. `cd` into the root of the repository.
+5. Run `main.py > output.txt`, I implemented an end-to-end procedure from simulation to processing to validation.
+6. Close the series of displayed images as they appear to continue running the program.
+7. Check contents of `output.txt` for the results.
+
+### **My Results**
+
+**Ran on 4MB images of body and veins and it compressed to 5.4KB and 41KB respectively using ScanLines method.
+-----PAR 0-----
+Body Process & Inverse Validity: True
+Veins Process & Inverse Validity: True
+Veins to Body %: 14.582373360366171
+Has cancer: True
+BODY DATA :
+---RAW---
+total size of raw data (bytes): 4000122
+
+---PROCESSED---
+num elements : 2691
+size of each element (bytes): 2
+total size of processed data (bytes): 5382
+Percentage of original size (%): 0.0013454589635016132
+
+VEINS DATA :
+---RAW---
+total size of raw data (bytes): 4000122
+
+---PROCESSED---
+num elements : 20482
+size of each element (bytes): 2
+total size of processed data (bytes): 40964
+Percentage of original size (%): 0.0102406876590264
+
+**Ran on 4MB images of body and veins and it compressed both to 500KB respectively using BitMap method.
+-----PAR 1-----
+Body Process & Inverse Validity: True
+Veins Process & Inverse Validity: True
+Veins to Body %: 14.582373360366171
+Has cancer: True
+BODY DATA :
+---RAW---
+total size of raw data (bytes): 4000122
+
+---PROCESSED---
+num elements : 500011
+size of each element (bytes): 1
+total size of processed data (bytes): 500011
+Percentage of original size (%): 0.12499893753240526
+
+VEINS DATA :
+---RAW---
+total size of raw data (bytes): 4000122
+
+---PROCESSED---
+num elements : 500011
+size of each element (bytes): 1
+total size of processed data (bytes): 500011
+Percentage of original size (%): 0.12499893753240526
+
+### **Worst Case Analysis**
+
+ScanLines technique works best on uniform and contiguous shapes. In its worst case, if the image was a perfect 
+checkerboard where the pixel color changes after every pixel, it could take up: 
+For uint16: 2 bytes per pixel x 100,000 x 100,000 + a little bit of header data = 20GB
+For unit8 : 1 byte per pixel x 100,000 x 100,000 + a little bit of header data = 10GB
+
+Which is why I implemented the BitMap method, which has a tightbound of: 
+1 bit per pixel x 100,000 x 100,000 + a little bit of header data = 1.25GB 
+for any 100,000 x 100,000 image.
+
+### **Improving Speed**
+
+To improve speed for smaller images, I wrote a MicroImage (no large) class which loads the whole image as a numpy array
+and performs cancer cells calculations by simply summing up the element-wise product of the body and veins images and 
+dividing it by the sum of the body image array.
+
+This runs much faster, albeit using more memory.
