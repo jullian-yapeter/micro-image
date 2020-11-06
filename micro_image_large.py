@@ -261,9 +261,3 @@ class Base64MicroImage(MicroImageLarge):
 
     def calc_veins_perc(self, veins_of_this_body):
         return NotImplementedError
-
-if __name__ == "__main__":
-    path = os.path.join(cfg.COLLECTED_DIR, "small_sess_0_veins.tiff")
-    body = ScanLinesMicroImage(path)
-    body.print_memory()
-    print(body.validate_process())

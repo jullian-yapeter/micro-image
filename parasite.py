@@ -42,15 +42,3 @@ class Parasite():
     def save_data(self):
         self.save_body_data()
         self.show_veins_data()
-
-if __name__ == "__main__":
-    par1 = Parasite("lab_sess_0",
-                    os.path.join(cfg.COLLECTED_DIR, "lab_sess_0_rf4_body.tiff"),
-                    os.path.join(cfg.COLLECTED_DIR, "lab_sess_0_rf4_veins.tiff"),
-                    BitMapMicroImage)
-    par1.show_image()
-    print("Body Process & Inverse Validity:", par1.body.validate_process())
-    print("Veins Process & Inverse Validity:", par1.veins.validate_process())
-    print("Veins to Body %:", par1.veins_body_frac * 100)
-    print("Has cancer:", par1.has_cancer())
-    par1.save_data()
