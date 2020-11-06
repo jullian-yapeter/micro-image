@@ -1,2 +1,70 @@
-# micro-image
-coding challenge to compress super resolution binary images
+# Dragonfruit AI Coding Challenge Submission
+## by Jullian Yapeter
+
+### **The Scenario**
+In this challenge, we are working with a researcher to diagnose cancer within microorganisms, referred to as parasites. 
+Each parasite is photographed twice under an electron microscope (100,000 x 100,000 pixels): the first image shows the 
+parasite's body , and the second image shows the parasite's veins (body and veins pixels are black and background 
+pixels are white).
+
+These images must be processed into smaller-to-store formats, in a way that the processing routine can be inversed to 
+get back the original images. Additionally, we must be able to calculate whether the parasite has cancer. If the number 
+of veins pixels within the parasite's body exceeds 10% of the total number of body pixels, the parasite is deemed to 
+have cancer. This calculation must be done as efficiently as possible.
+
+Images must be simulated to be used in testing the processing methodology before the real images are provided.
+
+### **The Method**
+
+***Simulation***
+Parasites are envisioned as amorphous blobs that are quite random but contiguous. veins are envisioned as thin and 
+random strings.
+
+The first step is to simulate the parasite images, keeping in mind the restriction that the parasite must be taking up 
+at least 25% of the image. I interpret this as the **bounding box** of the parasite must take up 25% of the image 
+(accounts for skinny and long parasites).
+
+To do this, I created a Frame class which generates random outer and inner frames, where the inner frame will be taken 
+up by the parasite's body, and the outer frame is where the inner frame will be placed into given an anchor point 
+(outer frame coordinate which represents the inner frame's top left corner). The inner frame is ensured to be at least 
+25% of the outer frame.
+
+The generated Frame object is then passed into my Simulator class which uses recursion to randomly draw on the given 
+Frame canvas. The drawing action is made using a "brush" of specified width that randomly walks around the canvas. 
+The body is drawn using a large brush width within the inner frame, and the veins are drawn with a smaller brush widht 
+within the outer frame. For the veins, a direction heuristic is programmed, so that it doesn't simply draw a ball of 
+veins, but rather something more realistic. the body image is resized so that its bounding box takes up the 
+entire inner frame.
+
+The generated images are then saved as TIFFs, which is lossless and thus helps us benchamark our compression 
+capacity better.
+
+***Processing (Compression)***
+
+To process the images, I envisioned and implemented a framework that encapsulates the processing, processing validation,
+cancer calculation, and the saving of processed images. This framework can also take in as a parameter the processing 
+(compression) technique to be used. A superclass called MicroImageLarge was implemented, which can be inherited from 
+in order to create more compression techniques. For this challenge I implemented 2: 
+**ScanLinesMicroImage** and **BitMapMicroImage**.
+
+**ScanLinesMicroImage** extends MicroImageLarge and is capable of compressing binary images by simply recording the 
+number of pixels before a chnage in the image from either white to black or black to white. The pixels are counted in 
+order of left to right, top to bottom. Also encoded in the processed image are, the size (#rows and #cols) of the 
+original image (encoded in a unit8-safe way) and a check byte that confirms which processing technique was used. While 
+uint8 ints can be safely used to record the number of pixels before a colour switch (ensured by a subroutine), uint16 
+is recommended because there will be less elements to store, and that compensates for the larger data type.
+
+**BitMapMicroImage** extends MicroImageLarge and is capable of compressing binary images by converting pixel data to 
+use 1 bit each, either 1 for a positive pixel or 0 for a background pixel. Also encoded in the processed image are, 
+the size (#rows and #cols) of the original image (encoded in a unit8-safe way) and a check byte that confirms which 
+processing technique was used. Uint8 is used here.
+
+In both these techniques, a validation routine is implemented which checks that raw_img = inv_process(process(raw_img)).
+They're also capable of reporting the resulting compression rate (processed img size / original img size * 100%).
+
+Each of these techniques implements a cancer calcuation mechanism. And they have been tested, arriving at the same 
+number regardless of technique.
+
+MicroImageLarge and its subclasses have been implemented in such a way where they can perform their functions without 
+loading the whole raw image at once, thus it saves RAM.
+
