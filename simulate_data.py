@@ -264,7 +264,7 @@ class Frame():
         return res
 
     # Shows the generated frames on which to draw the parasites. Shows inner frame area as a percentage of 
-    # the outer frame area
+    # the outer frame area.
     def show_frame(self):
         outer_frame, inner_frame = self.frame_to_arrays()
         outer_frame += 1

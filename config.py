@@ -27,7 +27,6 @@ NUM_VEIN_STRANDS = 3
 BODY_THICKNESS_PERC = 0.1
 VEIN_THICKNESS_PERC = BODY_THICKNESS_PERC * 0.1
 
-
 '''
 Image Processing metadata
 '''

@@ -9,68 +9,97 @@ from sys import getsizeof
 
 
 '''
-Image level data and methods
+MicroImageLarge class handles the loading, processing, and process validation of parasite images
 '''
 class MicroImageLarge():
 
+    # Initialize MicroImageLarge object
+    # Parameters:
+    # Path: the path to the image file to be processed
     def __init__(self, path):
         self.raw_size = os.path.getsize(path)
         self.raw = self._read_img(path)
         self.processed = self._process()
 
+    # Reads image file, currently uses Pillow
+    # Parameters:
+    # Path: the path to the image file to be processed
     def _read_img(self, path):
         return Image.open(path)
 
+    # Helper function to convert a binary numpy (1 for positive pixel, 0 for background) to a 0 255 Pillow image
+    # Parameters:
+    # bin_npy: binary numpy (1 for positive pixel, 0 for background)
     def _bin_npy_to_raw(self, bin_npy):
         return Image.fromarray((1-bin_npy.astype(np.uint8))*255)
 
+    # Create an 8-bit friendly representation of an image size 
+    # E.g. 1080 * 950 => 4,1,0,8,0,3,9,5,0
+    # rows, cols: number of rows and columns of the image
     def _make_shape_repr(self, rows, cols):
         rows_ls = [int(c) for c in str(rows)]
         cols_ls = [int(c) for c in str(cols)]
         return [len(rows_ls)] + [len(cols_ls)] + rows_ls  + cols_ls
 
+    # inverse of _make_shape_repr
+    # E.g. 4,1,0,8,0,3,9,5,0 => 1080 * 950 
     def _ret_shape_from_repr(self, shape_repr):
         data_start_idx = shape_repr[0] + shape_repr[1] + 2
         num_rows = int("".join(map(str, shape_repr[2:2 + shape_repr[0]])))
         num_cols = int("".join(map(str, shape_repr[2 + shape_repr[0]:2 + shape_repr[0] + shape_repr[1]])))
         return data_start_idx, num_rows, num_cols
 
+    # the processing routine packs a header into the numpy packet to ensure robustness (check bytes and image size)
+    # Parameters:
+    # processed: the processed image
     def _ret_header(self, processed):
         check_byte = processed[0]
         data_start_idx, num_rows, num_cols = self._ret_shape_from_repr(processed[1:])
         return check_byte, data_start_idx + 1, num_rows, num_cols
-        
+    
+    # Processing routine to compress parasite images to smaller numpy arrays
     def _process(self):
         raise NotImplementedError
 
+    # Inverse of _process, turns a compressed numpy array to a Pillow image
+    # Parameters:
+    # processed_img: result of _process()
     def _inverse_process(self, processed_img):
         raise NotImplementedError
 
+    # Performs a validation sequence that checks for differences between the raw Pillow
     def validate_process(self):
         return (ImageChops.difference(self.raw, self._inverse_process(self.processed)).getbbox()) is None
 
+    # Shows the raw image
     def show_raw_img(self):
         plt.imshow(self.raw, cmap='gray')
         plt.show()
 
+    # Shows the inversed(processed(raw)) image
     def show_inversed_img(self):
         plt.imshow(self._inverse_process(self.processed), cmap='gray')
         plt.show()
 
+    # saves the processed image
+    # Parameters:
+    # filename: the filename with which to save the processed image
     def save_processed_img(self, filename):
         raise NotImplementedError
 
+    # print the memory usage of the raw and processed images, as well as the compression rate
     def print_memory(self):
         raise NotImplementedError
 
+    # calculate the percentage of veins pixels within the body as it relates to the whole body
     def calc_veins_perc(self, veins_of_this_body):
         return NotImplementedError
 
 
 class ScanLinesMicroImage(MicroImageLarge):
 
-    name = "scanlines"
-    dtype = cfg.SCANLINES_DTYPE
+    name = "scanlines" # Name of MicroImageLarge subclass
+    dtype = cfg.SCANLINES_DTYPE # Set dtype being used by this MicroImageLarge subclass (currently "uint16")
 
     def __init__(self, path):
         super().__init__(path)
@@ -133,6 +162,7 @@ class ScanLinesMicroImage(MicroImageLarge):
         print(f"num elements : {self.processed.size}")
         print(f"size of each element (bytes): {self.processed.itemsize}")
         print(f"total size of processed data (bytes): {self.processed.nbytes}")
+        print(f"Percentage of original size (%): {self.processed.nbytes / self.raw_size}")
         print("")
 
     def calc_veins_perc(self, veins_of_this_body):
@@ -166,8 +196,8 @@ class ScanLinesMicroImage(MicroImageLarge):
 
 class BitMapMicroImage(MicroImageLarge):
 
-    name = "bitmap"
-    dtype = cfg.BITMAP_DTYPE
+    name = "bitmap" # Name of MicroImageLarge subclass
+    dtype = cfg.BITMAP_DTYPE # Set dtype being used by this MicroImageLarge subclass (currently "uint8")
 
     def __init__(self, path):
         super().__init__(path)
@@ -216,6 +246,7 @@ class BitMapMicroImage(MicroImageLarge):
         print(f"num elements : {self.processed.size}")
         print(f"size of each element (bytes): {self.processed.itemsize}")
         print(f"total size of processed data (bytes): {self.processed.nbytes}")
+        print(f"Percentage of original size (%): {self.processed.nbytes / self.raw_size}")
         print("")
 
     def calc_veins_perc(self, veins_of_this_body):
@@ -257,6 +288,7 @@ class Base64MicroImage(MicroImageLarge):
 
         print("---PROCESSED---")
         print(f"total size of processed data (bytes): {getsizeof(self.processed)}")
+        print(f"Percentage of original size (%): {getsizeof(self.processed) / self.raw_size}")
         print("")
 
     def calc_veins_perc(self, veins_of_this_body):
