@@ -82,33 +82,51 @@ loading the whole raw image at once, thus it saves RAM.
 
 ### **My Results**
 
-**Ran on 4MB images of body and veins and it compressed to 5.4KB and 41KB respectively using ScanLines method.
+**Ran on 4MB images of body and veins and it compressed to 5.4KB and 41KB respectively using ScanLines method.**
 -----PAR 0-----
+
 Body Process & Inverse Validity: True
+
 Veins Process & Inverse Validity: True
+
 Veins to Body %: 14.582373360366171
+
 Has cancer: True
+
 BODY DATA :
+
 ---RAW---
+
 total size of raw data (bytes): 4000122
 
 ---PROCESSED---
+
 num elements : 2691
+
 size of each element (bytes): 2
+
 total size of processed data (bytes): 5382
+
 Percentage of original size (%): 0.0013454589635016132
 
 VEINS DATA :
+
 ---RAW---
+
 total size of raw data (bytes): 4000122
 
 ---PROCESSED---
+
 num elements : 20482
+
 size of each element (bytes): 2
+
 total size of processed data (bytes): 40964
+
 Percentage of original size (%): 0.0102406876590264
 
-**Ran on 4MB images of body and veins and it compressed both to 500KB respectively using BitMap method.
+
+**Ran on 4MB images of body and veins and it compressed both to 500KB respectively using BitMap method.**
 -----PAR 1-----
 Body Process & Inverse Validity: True
 Veins Process & Inverse Validity: True
