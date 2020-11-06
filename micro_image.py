@@ -7,6 +7,9 @@ import os
 from PIL import Image
 from sys import getsizeof
 
+'''
+Refer to micro_image_large.py for code documentation
+'''
 
 '''
 Image level data and methods
