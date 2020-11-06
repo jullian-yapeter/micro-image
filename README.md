@@ -181,6 +181,9 @@ checkerboard where the pixel color changes after every pixel, it could take up:
 For uint16: 2 bytes per pixel x 100,000 x 100,000 + a little bit of header data = 20GB
 For unit8 : 1 byte per pixel x 100,000 x 100,000 + a little bit of header data = 10GB
 
+The general case for abody image would be if there are 2 colour switches per row, assuming a reasonably uniform and contiguous shape:
+For uint16: 2 bytes per pixel x 100,000 rows x 2 ints per row + a little bit of header data = 400KB
+
 Which is why I implemented the BitMap method, which has a tightbound of: 
 1 bit per pixel x 100,000 x 100,000 + a little bit of header data = 1.25GB 
 for any 100,000 x 100,000 image.
