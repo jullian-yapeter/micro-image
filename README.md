@@ -18,6 +18,7 @@ Images must be simulated to be used in testing the processing methodology before
 ### **The Method**
 
 ***Simulation***
+
 Parasites are envisioned as amorphous blobs that are quite random but contiguous. veins are envisioned as thin and 
 random strings.
 
