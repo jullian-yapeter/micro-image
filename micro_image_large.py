@@ -69,6 +69,8 @@ class MicroImageLarge():
 
     # Performs a validation sequence that checks for differences between the raw Pillow
     def validate_process(self):
+        self.show_raw_img()
+        self.show_inversed_img()
         return (ImageChops.difference(self.raw, self._inverse_process(self.processed)).getbbox()) is None
 
     # Shows the raw image

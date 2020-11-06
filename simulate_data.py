@@ -58,7 +58,7 @@ class Simulator():
     # Save all the rendered images of bodies and veins
     def save_all_data(self):
         self.save_all_bodies()
-        self.save_all_veins
+        self.save_all_veins()
 
     # Save only the images of all the rendered body images
     # The filename will be {session name}_{sample number}_rf{resize factor}_body.{file type}
