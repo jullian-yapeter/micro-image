@@ -1,4 +1,4 @@
-# Dragonfruit AI Coding Challenge Submission
+# Image Compression Coding Challenge Submission
 ## by Jullian Yapeter
 
 ### **The Scenario**
