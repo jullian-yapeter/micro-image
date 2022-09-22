@@ -75,7 +75,7 @@ loading the whole raw image at once, thus it saves RAM.
 Using Python 3.7.7
 
 1. Clone this repository, and `cd` into it.
-2. Run `pip install requirements`.
+2. Run `pip install requirements.txt`.
 3. Create the following directories: `data`, `data/collected`, `data/processed`. They will hold the results of 
    simulation and of processing.
 4. `cd` into the root of the repository.
